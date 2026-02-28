@@ -2,13 +2,13 @@
 
 -  A theme for Pegasus Frontend, inspired by the Big Picture Library.
 
-![screen0](https://github.com/ZagonAb/Anbernic-Theme/blob/4228a0abacf9432cb65a704afd8fda66e225d07a/.meta/screenshots/screen0.png)
+![screen0](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/0.png)
 
-![screen1](https://github.com/ZagonAb/Anbernic-Theme/blob/4228a0abacf9432cb65a704afd8fda66e225d07a/.meta/screenshots/screen1.png)
+![screen1](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/1.png)
 
-![screen2](https://github.com/ZagonAb/Anbernic-Theme/blob/4228a0abacf9432cb65a704afd8fda66e225d07a/.meta/screenshots/screen0.png)
+![screen2](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/2.png)
 
-![screen3](https://github.com/ZagonAb/Anbernic-Theme/blob/4228a0abacf9432cb65a704afd8fda66e225d07a/.meta/screenshots/screen1.png)
+![screen3](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/3.png)
 
 # RetroArch Monochrome Icons
 
