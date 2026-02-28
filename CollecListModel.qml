@@ -1,0 +1,81 @@
+import QtQuick 2.15
+import SortFilterProxyModel 0.2
+
+Item {
+    id: root
+
+    property alias model:           collectionsListModel
+    property alias favoritesModel:  favoritesModel
+    property bool  favoritesVisible: favoritesModel.count > 0
+
+    SortFilterProxyModel {
+        id: allGamesModel
+        sourceModel: api.allGames
+        sorters: RoleSorter {
+            roleName: "sortBy"
+            sortOrder: Qt.AscendingOrder
+        }
+    }
+
+    SortFilterProxyModel {
+        id: favoritesModel
+        sourceModel: api.allGames
+        filters: ValueFilter {
+            roleName: "favorite"
+            value: true
+        }
+        sorters: RoleSorter {
+            roleName: "sortBy"
+            sortOrder: Qt.AscendingOrder
+        }
+    }
+
+    SortFilterProxyModel {
+        id: lastPlayedModel
+        sourceModel: api.allGames
+        filters: ExpressionFilter {
+            expression: {
+                var d = model.lastPlayed;
+                return d instanceof Date && !isNaN(d.getTime());
+            }
+        }
+        sorters: RoleSorter {
+            roleName: "lastPlayed"
+            sortOrder: Qt.DescendingOrder
+        }
+    }
+
+    ListModel {
+        id: collectionsListModel
+
+        Component.onCompleted: {
+            collectionsListModel.append({
+                name: "All Games",
+                shortName: "allgames",
+                games: allGamesModel,
+                isCollections: false
+            });
+
+            collectionsListModel.append({
+                name: "Favorites",
+                shortName: "favorites",
+                games: favoritesModel,
+                isCollections: false
+            });
+
+            collectionsListModel.append({
+                name: "Collections",
+                shortName: "collections",
+                games: null,
+                isCollections: true
+            });
+
+            collectionsListModel.append({
+                name: "Last Played",
+                shortName: "lastplayed",
+                games: lastPlayedModel,
+                isCollections: false
+            });
+        }
+    }
+}
