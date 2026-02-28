@@ -89,12 +89,14 @@ FocusScope {
 
             property string consoleColor: {
                 if (!root.showingCollectionList) return "#1a1a1a";
+                if (!entry || !entry.name) return "#1a1a1a";
                 var sn = entry.shortName || entry.name.toLowerCase();
                 return consoleColors.data[sn] || "#1a1a1a";
             }
 
             property string systemLogoUrl: {
                 if (!root.showingCollectionList) return "";
+                if (!entry || !entry.name) return "";
                 var sn = entry.shortName || entry.name.toLowerCase();
                 return "assets/systems/" + sn + ".png";
             }
@@ -220,7 +222,7 @@ FocusScope {
                 }
                 width:   vpx(32)
                 height:  vpx(32)
-                visible: cell.isGame && cell.entry.favorite
+                visible: cell.isGame && cell.entry && cell.entry.favorite === true
 
                 Rectangle {
                     anchors.fill: parent
@@ -345,6 +347,7 @@ FocusScope {
         if (!entry) return;
 
         if (root.isCollections && !root.inCollectionGames) {
+            if (!entry.games || entry.games.count === 0) return;
             root.activeCollectionName  = entry.name;
             root.activeCollectionGames = entry.games;
             root.inCollectionGames = true;

@@ -66,7 +66,7 @@ Item {
             collectionsListModel.append({
                 name: "Collections",
                 shortName: "collections",
-                games: null,
+                games: allGamesModel,
                 isCollections: true
             });
 

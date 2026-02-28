@@ -20,7 +20,7 @@ Rectangle {
 
     readonly property bool showFavorite: activeView === "grid"
     readonly property bool showPlay:     activeView === "grid"
-    readonly property bool isFav:        currentGame ? currentGame.favorite : false
+    readonly property bool isFav:        currentGame ? (currentGame.favorite === true) : false
 
     readonly property string bLabel: {
         if (activeView === "search" && searchHasText) return "BACKSPACE";
