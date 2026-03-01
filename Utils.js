@@ -32,14 +32,29 @@ function formatRating(rating) {
 function normalizeForSearch(text) {
     if (!text) return "";
     return text.toLowerCase()
-               .replace(/[áàäâã]/g, "a")
-               .replace(/[éèëê]/g,  "e")
-               .replace(/[íìïî]/g,  "i")
-               .replace(/[óòöôõ]/g, "o")
-               .replace(/[úùüû]/g,  "u")
-               .replace(/[ñ]/g,     "n")
-               .replace(/[ç]/g,     "c")
-               .trim();
+    .replace(/[áàäâã]/g, "a")
+    .replace(/[éèëê]/g,  "e")
+    .replace(/[íìïî]/g,  "i")
+    .replace(/[óòöôõ]/g, "o")
+    .replace(/[úùüû]/g,  "u")
+    .replace(/[ñ]/g,     "n")
+    .replace(/[ç]/g,     "c")
+    .trim();
+}
+
+function formatLastPlayed(date) {
+    if (!date || isNaN(date.getTime())) return "";
+    var now      = new Date();
+    var diffMs   = now - date;
+    var diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0)        return "TODAY";
+    if (diffDays === 1)        return "YESTERDAY";
+    if (diffDays <= 7)         return "LAST WEEK";
+    if (diffDays <= 14)        return "LAST TWO WEEKS";
+    if (diffDays <= 30)        return "LAST MONTH";
+    if (diffDays <= 365)       return "LAST " + Math.floor(diffDays / 30) + " MONTHS";
+    return "OVER A YEAR AGO";
 }
 
 function gameMatchesSearch(game, query) {

@@ -4,9 +4,10 @@ import SortFilterProxyModel 0.2
 Item {
     id: root
 
-    property alias model:           collectionsListModel
-    property alias favoritesModel:  favoritesModel
-    property bool  favoritesVisible: favoritesModel.count > 0
+    property alias model: collectionsListModel
+    property alias favoritesModel: favoritesModel
+    property alias lastPlayedModel: lastPlayedModel
+    property bool favoritesVisible: favoritesModel.count > 0
 
     SortFilterProxyModel {
         id: allGamesModel
@@ -20,14 +21,8 @@ Item {
     SortFilterProxyModel {
         id: favoritesModel
         sourceModel: api.allGames
-        filters: ValueFilter {
-            roleName: "favorite"
-            value: true
-        }
-        sorters: RoleSorter {
-            roleName: "sortBy"
-            sortOrder: Qt.AscendingOrder
-        }
+        filters: ValueFilter { roleName: "favorite"; value: true }
+        sorters: RoleSorter  { roleName: "sortBy";   sortOrder: Qt.AscendingOrder }
     }
 
     SortFilterProxyModel {
@@ -39,10 +34,7 @@ Item {
                 return d instanceof Date && !isNaN(d.getTime());
             }
         }
-        sorters: RoleSorter {
-            roleName: "lastPlayed"
-            sortOrder: Qt.DescendingOrder
-        }
+        sorters: RoleSorter { roleName: "lastPlayed"; sortOrder: Qt.DescendingOrder }
     }
 
     ListModel {
@@ -50,31 +42,20 @@ Item {
 
         Component.onCompleted: {
             collectionsListModel.append({
-                name: "All Games",
-                shortName: "allgames",
-                games: allGamesModel,
-                isCollections: false
+                name: "All Games",   shortName: "allgames",
+                games: allGamesModel, isCollections: false
             });
-
             collectionsListModel.append({
-                name: "Favorites",
-                shortName: "favorites",
-                games: favoritesModel,
-                isCollections: false
+                name: "Favorites",   shortName: "favorites",
+                games: favoritesModel, isCollections: false
             });
-
             collectionsListModel.append({
-                name: "Collections",
-                shortName: "collections",
-                games: allGamesModel,
-                isCollections: true
+                name: "Collections", shortName: "collections",
+                games: allGamesModel,  isCollections: true
             });
-
             collectionsListModel.append({
-                name: "Last Played",
-                shortName: "lastplayed",
-                games: lastPlayedModel,
-                isCollections: false
+                name: "Last Played", shortName: "lastplayed",
+                games: lastPlayedModel, isCollections: false
             });
         }
     }

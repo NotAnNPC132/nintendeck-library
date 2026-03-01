@@ -133,7 +133,6 @@ FocusScope {
                     source: cell.systemLogoUrl
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
-                    smooth: true
                     mipmap: true
                     visible: root.showingCollectionList
                 }
@@ -143,7 +142,7 @@ FocusScope {
                     source: cell.coverUrl
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
-                    smooth: true
+                    mipmap: true
                     visible: !root.showingCollectionList
                 }
             }
@@ -166,7 +165,7 @@ FocusScope {
                 source: cell.coverUrl
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
-                smooth: true
+                mipmap: true
 
                 Rectangle {
                     anchors.fill: parent
@@ -184,7 +183,6 @@ FocusScope {
                 source: cell.systemLogoUrl
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
-                smooth: true
                 mipmap: true
                 visible: root.showingCollectionList
                 opacity: 0.6
@@ -233,8 +231,8 @@ FocusScope {
                 Image {
                     id: favIconSrc
                     anchors.centerIn: parent
-                    width:    vpx(30)
-                    height:   vpx(30)
+                    width:    vpx(25)
+                    height:   vpx(25)
                     source:   "assets/icons/favorite.svg"
                     fillMode: Image.PreserveAspectFit
                     mipmap:   true
@@ -320,7 +318,7 @@ FocusScope {
                     root.activeCollectionGames = null;
                     grid.currentIndex = 0;
                 } else {
-                    event.accepted = false;
+                    root.exitRequested();
                 }
             }
             if (api.keys.isPrevPage(event)) {

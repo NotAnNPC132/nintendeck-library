@@ -9,29 +9,86 @@ FocusScope {
         return value * (width / 1280);
     }
 
-    readonly property string activeView: {
-        if (searchBar.hasFocus)     return "search";
-        if (collecBar.activeFocus)  return "collec";
-        if (gameGrid.isCollections && !gameGrid.inCollectionGames)
+    property string currentScreen: "home"
+
+    readonly property bool onHome:    currentScreen === "home"
+    readonly property bool onLibrary: currentScreen === "library"
+
+    function goHome() {
+        currentScreen = "home";
+        if (homeLoader.item) homeLoader.item.forceActiveFocus();
+    }
+
+    function goLibrary() {
+        currentScreen = "library";
+        gameGridLoader.active = true;
+        _focusGridTimer.start();
+    }
+
+    Timer {
+        id: _focusGridTimer
+        interval: 0
+        repeat:   false
+        onTriggered: {
+            if (gameGridLoader.item) gameGridLoader.item.forceActiveFocus();
+        }
+    }
+
+    function goLibraryKeepFocus() {
+        currentScreen = "library";
+        gameGridLoader.active = true;
+        _restoreSearchFocusTimer.start();
+    }
+
+    Timer {
+        id: _restoreSearchFocusTimer
+        interval: 0
+        repeat:   false
+        onTriggered: searchBar.activate()
+    }
+
+    SplashScreen {
+        id: splashScreen
+        anchors.fill: parent
+        z: 1003
+    }
+
+    readonly property string _bottomActiveView: {
+        if (onHome) {
+            if (homeLoader.item && homeLoader.item.onViewMoreFocused) return "home_viewmore";
+            return "grid";
+        }
+
+        if (searchBar.hasFocus)    return "search";
+        if (collecBar.activeFocus) return "collec";
+
+        var gridItem = gameGridLoader.item;
+        if (gridItem && gridItem.isCollections && !gridItem.inCollectionGames)
             return "collections";
         return "grid";
     }
 
-    readonly property bool gridIsRoot: {
-        if (!gameGrid.isCollections) return true;
-        if (gameGrid.inCollectionGames) return false;
+    readonly property var _bottomGame: {
+        if (onHome && homeLoader.item) {
+            var rec = homeLoader.item.recCurrentGame;
+            if (rec) return rec;
+            return homeLoader.item.currentGame;
+        }
+        if (onLibrary && gameGridLoader.item) return gameGridLoader.item.currentEntry;
+        return null;
+    }
+
+    readonly property bool _bottomIsRoot: {
+        if (onHome) return true;
         return false;
     }
+
+    readonly property string activeView: _bottomActiveView
 
     SortFilterProxyModel {
         id: searchResultModel
         sourceModel: api.allGames
-
-        sorters: RoleSorter {
-            roleName: "sortBy"
-            sortOrder: Qt.AscendingOrder
-        }
-
+        sorters: RoleSorter { roleName: "sortBy"; sortOrder: Qt.AscendingOrder }
         filters: ExpressionFilter {
             id: searchFilter
             enabled: searchBar.isSearching
@@ -52,195 +109,220 @@ FocusScope {
         }
     }
 
-    Rectangle {
+    Rectangle { anchors.fill: parent; color: "#0b1117"; z: 0 }
+
+    Loader {
+        id: homeLoader
         anchors.fill: parent
-        color: "#0b1117"
-        z: 0
-    }
+        active: false
+        visible: root.onHome && status === Loader.Ready
+        z: 1
 
-    SearchBar {
-        id: searchBar
-        anchors {
-            top:   parent.top
-            left:  parent.left
-            right: parent.right
-        }
-        height: vpx(48)
-        gameGridContentY: gameGrid.contentY
-        z:                1002
+        sourceComponent: HomeView {
+            onGoToLibrary: root.goLibrary()
+            onFocusSearchRequested: searchBar.activate()
 
-        onFocusDownRequested: {
-            searchBar.focus = false;
-            collecBar.focus = true;
+            Component.onCompleted: {
+                console.log("HomeView cargado completamente");
+
+                Qt.callLater(function() {
+                    splashScreen.opacity = 0;
+                    resetFocus();
+                });
+            }
         }
 
-        onBackToGridRequested: {
-            searchBar.clearSearch();
-            searchBar.focus = false;
-            gameGrid.focus  = true;
+        onStatusChanged: {
+            if (status === Loader.Ready) {
+                console.log("HomeLoader listo");
+            }
         }
     }
 
     Rectangle {
         id: collecBarBg
-        anchors {
-            top:   searchBar.bottom
-            left:  parent.left
-            right: parent.right
-        }
+        anchors { top: searchBar.bottom; left: parent.left; right: parent.right }
         height:  collecBar.height + vpx(3)
         z:       1000
         color:   "#05070a"
-        opacity: gameGrid.contentY > vpx(10) ? 0.97 : 0.0
+        opacity: root.onLibrary && gameGridLoader.item && gameGridLoader.item.contentY > vpx(10) ? 0.97 : 0.0
         Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.InOutQuad } }
     }
 
     NavButton {
-        id: btnL1
-        label: "L1"
-        side:  "left"
-        anchors {
-            verticalCenter: collecBar.verticalCenter
-            left:           parent.left
-            leftMargin:     vpx(55)
-        }
-        width:  vpx(40)
-        height: vpx(30)
-        z:      1001
+        id: btnL1; label: "L1"; side: "left"
+        anchors { verticalCenter: collecBar.verticalCenter; left: parent.left; leftMargin: vpx(55) }
+        width: vpx(40); height: vpx(30); z: 1001
+        visible: root.onLibrary
         onClicked: collecBar.prevTab()
     }
 
     NavButton {
-        id: btnR1
-        label: "R1"
-        side:  "right"
-        anchors {
-            verticalCenter: collecBar.verticalCenter
-            right:          parent.right
-            rightMargin:    vpx(55)
-        }
-        width:  vpx(40)
-        height: vpx(30)
-        z:      1001
+        id: btnR1; label: "R1"; side: "right"
+        anchors { verticalCenter: collecBar.verticalCenter; right: parent.right; rightMargin: vpx(55) }
+        width: vpx(40); height: vpx(30); z: 1001
+        visible: root.onLibrary
         onClicked: collecBar.nextTab()
     }
 
     CollecListView {
         id: collecBar
         anchors {
-            top:         searchBar.bottom
-            left:        parent.left
-            right:       parent.right
-            leftMargin:  vpx(72)
-            rightMargin: vpx(72)
+            top: searchBar.bottom; left: parent.left; right: parent.right
+            leftMargin: vpx(72); rightMargin: vpx(72)
         }
-        height: vpx(56)
-        z:      1000
+        height:  vpx(56)
+        z:       1000
+        visible: root.onLibrary
+        enabled: root.onLibrary
 
         Keys.onPressed: {
             if (api.keys.isPrevPage(event)) { event.accepted = true; collecBar.prevTab(); }
             if (api.keys.isNextPage(event)) { event.accepted = true; collecBar.nextTab(); }
-
-            if (api.keys.isCancel(event)) {
+            if (api.keys.isCancel(event))   {
                 event.accepted = true;
                 collecBar.focus = false;
-                gameGrid.focus  = true;
+                if (gameGridLoader.item) gameGridLoader.item.forceActiveFocus();
+            }
+        }
+        onFocusUpRequested: { collecBar.focus = false; searchBar.activate(); }
+        Keys.onDownPressed: {
+            if (gameGridLoader.item) gameGridLoader.item.forceActiveFocus();
+            collecBar.focus = false;
+        }
+    }
+
+    Loader {
+        id: gameGridLoader
+        anchors {
+            top: collecBar.bottom; left: parent.left; right: parent.right; bottom: bottomBar.top
+            leftMargin: vpx(50); rightMargin: vpx(50); topMargin: vpx(12)
+        }
+        z: 0
+        active: false
+        visible: root.onLibrary && status === Loader.Ready
+
+        sourceComponent: GamesGridView {
+            id: gameGrid
+
+            focus: root.onLibrary
+
+            gamesModel:    searchBar.isSearching ? searchResultModel : collecBar.currentGames
+            isCollections: searchBar.isSearching ? false             : collecBar.currentIsCollections
+
+            onPrevTabRequested: collecBar.prevTab()
+            onNextTabRequested: collecBar.nextTab()
+            onExitRequested:    root.goHome()
+
+            Keys.onUpPressed: {
+                if (!isCollections || !inCollectionGames) {
+                    focus           = false;
+                    collecBar.focus = true;
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                propagateComposedEvents: true
+                onClicked: { parent.forceActiveFocus(); mouse.accepted = false; }
             }
         }
 
-        onFocusUpRequested: {
-            collecBar.focus = false;
-            searchBar.activate();
+        onStatusChanged: {
+            if (status === Loader.Ready) {
+                console.log("GameGridLoader listo");
+            }
         }
+    }
 
-        Keys.onDownPressed: {
-            gameGrid.focus  = true;
-            collecBar.focus = false;
+    SearchBar {
+        id: searchBar
+        anchors { top: parent.top; left: parent.left; right: parent.right }
+        height: vpx(48)
+        gameGridContentY: root.onLibrary && gameGridLoader.item ? gameGridLoader.item.contentY : vpx(11)
+        z: 1002
+
+        onFocusDownRequested: {
+            searchBar.focus = false;
+            if (root.onLibrary) collecBar.focus = true;
+            else if (homeLoader.item) homeLoader.item.forceActiveFocus();
+        }
+        onBackToGridRequested: {
+            searchBar.clearSearch();
+            searchBar.focus = false;
+            if (root.onLibrary && gameGridLoader.item) gameGridLoader.item.forceActiveFocus();
+            else if (homeLoader.item) homeLoader.item.forceActiveFocus();
+        }
+    }
+
+    Connections {
+        target: searchBar
+        function onIsSearchingChanged() {
+            if (searchBar.isSearching && root.onHome) root.goLibraryKeepFocus();
         }
     }
 
     BottomBar {
         id: bottomBar
-        anchors {
-            left:   parent.left
-            right:  parent.right
-            bottom: parent.bottom
-        }
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
         height: vpx(48)
         z:      1002
-        opacity: gameGrid.contentY > vpx(10) ? 0.97 : 1.0
 
-        activeView:    root.activeView
-        currentGame:   gameGrid.currentEntry
+        activeView:    root._bottomActiveView
+        currentGame:   root._bottomGame
         searchHasText: searchBar.hasText
-        isRootGrid:    root.gridIsRoot
+        isRootGrid:    root._bottomIsRoot
 
         onFavoriteClicked: {
-            gameGrid.toggleFavorite();
+            if (root.onHome && homeLoader.item) {
+                var g = homeLoader.item.recCurrentGame || homeLoader.item.currentGame;
+                if (g) g.favorite = !g.favorite;
+            } else if (root.onLibrary && gameGridLoader.item) {
+                gameGridLoader.item.toggleFavorite();
+            }
         }
 
         onPlayClicked: {
-            gameGrid.launchCurrent();
+            if (root.onHome && homeLoader.item && homeLoader.item.currentGame)
+                homeLoader.item.currentGame.launch();
+            else if (root.onLibrary && gameGridLoader.item)
+                gameGridLoader.item.launchCurrent();
         }
 
         onBackClicked: {
-            if (root.activeView === "search") {
-                if (searchBar.isSearching) {
-                    searchBar.backspaceOne();
-                } else {
-                    searchBar.clearSearch();
-                    searchBar.focus = false;
-                    gameGrid.focus  = true;
-                }
-            } else if (root.activeView === "collec") {
-                collecBar.focus = false;
-                gameGrid.focus  = true;
-            } else if (root.activeView === "collections") {
-                gameGrid.focus  = false;
-                collecBar.focus = true;
+            if (root.onHome) {
+                Qt.quit();
             } else {
-                //Qt.quit();
+                if (root._bottomActiveView === "search") {
+                    if (searchBar.isSearching) searchBar.backspaceOne();
+                    else {
+                        searchBar.clearSearch();
+                        searchBar.focus = false;
+                        if (gameGridLoader.item) gameGridLoader.item.forceActiveFocus();
+                    }
+                } else if (root._bottomActiveView === "collec") {
+                    collecBar.focus = false;
+                    if (gameGridLoader.item) gameGridLoader.item.forceActiveFocus();
+                } else if (root._bottomActiveView === "collections") {
+                    if (gameGridLoader.item) gameGridLoader.item.focus = false;
+                    collecBar.focus = true;
+                } else {
+                    root.goHome();
+                }
             }
         }
     }
 
-    GamesGridView {
-        id: gameGrid
-        anchors {
-            top:         collecBar.bottom
-            left:        parent.left
-            right:       parent.right
-            bottom:      bottomBar.top
-            leftMargin:  vpx(50)
-            rightMargin: vpx(50)
-            topMargin:   vpx(12)
-        }
-        z: 0
+    Component.onCompleted: {
+        loadTimer.start();
+    }
 
-        gamesModel:    searchBar.isSearching ? searchResultModel  : collecBar.currentGames
-        isCollections: searchBar.isSearching ? false              : collecBar.currentIsCollections
-
-        focus: true
-
-        onPrevTabRequested: collecBar.prevTab()
-        onNextTabRequested: collecBar.nextTab()
-
-        onExitRequested: Qt.quit()
-
-        Keys.onUpPressed: {
-            if (!isCollections || !inCollectionGames) {
-                gameGrid.focus  = false;
-                collecBar.focus = true;
-            }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            propagateComposedEvents: true
-            onClicked: {
-                gameGrid.forceActiveFocus();
-                mouse.accepted = false;
-            }
+    Timer {
+        id: loadTimer
+        interval: 100
+        onTriggered: {
+            console.log("Iniciando carga de HomeView");
+            homeLoader.active = true;
         }
     }
 }

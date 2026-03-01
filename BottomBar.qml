@@ -23,8 +23,9 @@ Rectangle {
     readonly property bool isFav:        currentGame ? (currentGame.favorite === true) : false
 
     readonly property string bLabel: {
-        if (activeView === "search" && searchHasText) return "BACKSPACE";
-        if (activeView === "grid"   && isRootGrid)    return "EXIT";
+        if (activeView === "search" && searchHasText)  return "BACKSPACE";
+        if (activeView === "grid"   && isRootGrid)     return "EXIT";
+        if (activeView === "home_viewmore")             return "EXIT";
         return "BACK";
     }
 
@@ -84,6 +85,7 @@ Rectangle {
                     font.pixelSize: vpx(13)
                     font.bold: true
                     font.letterSpacing: vpx(0.6)
+                    Behavior on color { ColorAnimation { duration: 200 } }
                 }
             }
             MouseArea {

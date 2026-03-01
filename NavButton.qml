@@ -70,4 +70,5 @@ Item {
     onIsActiveChanged: bg.requestPaint()
     onWidthChanged:    bg.requestPaint()
     onHeightChanged:   bg.requestPaint()
+    onVisibleChanged:   if (visible) bg.requestPaint()
 }
