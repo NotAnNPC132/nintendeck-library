@@ -233,5 +233,14 @@ FocusScope {
                 collecBar.focus = true;
             }
         }
+
+        MouseArea {
+            anchors.fill: parent
+            propagateComposedEvents: true
+            onClicked: {
+                gameGrid.forceActiveFocus();
+                mouse.accepted = false;
+            }
+        }
     }
 }

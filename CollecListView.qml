@@ -85,7 +85,10 @@ FocusScope {
                 id: hoverArea
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: listView.currentIndex = index
+                onClicked: {
+                    listView.currentIndex = index;
+                    listView.forceActiveFocus();
+                }
             }
         }
 
