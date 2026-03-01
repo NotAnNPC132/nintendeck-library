@@ -9,12 +9,12 @@ FocusScope {
     signal goToLibrary()
     signal focusSearchRequested()
 
-    readonly property var    currentGame:       _strip.currentIndex < _recentCount
+    readonly property var currentGame: _strip.currentIndex < _recentCount
     ? _getGame(_strip.currentIndex) : null
-    readonly property bool   onViewMore:        _strip.currentIndex >= _recentCount
-    readonly property bool   onViewMoreFocused: _strip.activeFocus && (_strip.currentIndex >= _recentCount)
-    readonly property string currentTitle:      currentGame ? currentGame.title : ""
-    readonly property string currentPlaytime:   currentGame ? Utils.formatPlayTime(currentGame.playTime)   : ""
+    readonly property bool onViewMore: _strip.currentIndex >= _recentCount
+    readonly property bool onViewMoreFocused: _strip.activeFocus && (_strip.currentIndex >= _recentCount)
+    readonly property string currentTitle: currentGame ? currentGame.title : ""
+    readonly property string currentPlaytime: currentGame ? Utils.formatPlayTime(currentGame.playTime) : ""
     readonly property string currentLastPlayed: currentGame ? Utils.formatLastPlayed(currentGame.lastPlayed) : ""
 
     readonly property var recCurrentGame: {
@@ -45,7 +45,7 @@ FocusScope {
     }
 
     readonly property int _recentCount: Math.min(_recentSrc.count, 3)
-    readonly property int _totalSlots:  _recentCount + 1
+    readonly property int _totalSlots: _recentCount + 1
     property var _recentGames: []
 
     function _rebuildCache() {
@@ -70,19 +70,19 @@ FocusScope {
         return _recentGames[idx];
     }
 
-    property var _recGames:   []
+    property var _recGames: []
     property var _recReasons: []
 
     function _buildRecommended() {
         var total = api.allGames.count;
         if (total === 0) { _recGames = []; _recReasons = []; return; }
 
-        var now          = new Date();
-        var oneWeekMs    = 7 * 24 * 60 * 60 * 1000;
+        var now = new Date();
+        var oneWeekMs = 7 * 24 * 60 * 60 * 1000;
 
-        var refGenres      = {};
+        var refGenres = {};
         var refCollections = {};
-        var recentTitles   = {};
+        var recentTitles = {};
 
         for (var j = 0; j < total; j++) {
             var pg = api.allGames.get(j);
@@ -106,18 +106,18 @@ FocusScope {
 
         var hasRef = Object.keys(refGenres).length > 0 || Object.keys(refCollections).length > 0;
 
-        var poolPlayed    = [];
+        var poolPlayed = [];
         var poolFavorites = [];
-        var poolOther     = [];
+        var poolOther = [];
 
         for (var i = 0; i < total; i++) {
             var g2 = api.allGames.get(i);
             if (!g2 || recentTitles[g2.title]) continue;
 
-            var score  = g2.rating * 10;
+            var score = g2.rating * 10;
             var reason = "";
 
-            var hasPlayTime  = g2.playTime > 60;
+            var hasPlayTime = g2.playTime > 60;
             var hasPlayCount = g2.playCount > 0;
 
             if (g2.playCount >= 20) {
@@ -193,11 +193,11 @@ FocusScope {
             }
         }
 
-        poolPlayed.sort(function(a, b)    { return b.score - a.score; });
+        poolPlayed.sort(function(a, b) { return b.score - a.score; });
         poolFavorites.sort(function(a, b) { return b.score - a.score; });
-        poolOther.sort(function(a, b)     { return b.score - a.score; });
+        poolOther.sort(function(a, b) { return b.score - a.score; });
 
-        var result  = [];
+        var result = [];
         var reasons = [];
 
         for (var pi = 0; pi < poolPlayed.length && result.length < 3; pi++) {
@@ -221,7 +221,7 @@ FocusScope {
             reasons.push(rest[ri].reason);
         }
 
-        _recGames   = result;
+        _recGames = result;
         _recReasons = reasons;
     }
 
@@ -249,17 +249,17 @@ FocusScope {
     Image {
         id: _bgImg
         anchors.fill: parent
-        source:       root._bgSrc
-        fillMode:     Image.PreserveAspectCrop
+        source: root._bgSrc
+        fillMode: Image.PreserveAspectCrop
         asynchronous: true
-        visible:      false
+        visible: false
     }
 
     FastBlur {
         anchors.fill: _bgImg
-        source:       _bgImg
-        radius:       60
-        opacity:      _bgImg.status === Image.Ready && _bgImg.source !== "" ? 1.0 : 0.0
+        source: _bgImg
+        radius: 60
+        opacity: _bgImg.status === Image.Ready && _bgImg.source !== "" ? 1.0 : 0.0
         Behavior on opacity { NumberAnimation { duration: 400 } }
     }
 
@@ -267,8 +267,8 @@ FocusScope {
 
     Rectangle {
         anchors.fill: parent
-        color:        "#0b1117"
-        opacity:      root._bgSrc !== "" ? 0.55 : 1.0
+        color: "#0b1117"
+        opacity: root._bgSrc !== "" ? 0.55 : 1.0
         Behavior on opacity { NumberAnimation { duration: 500 } }
     }
 
@@ -285,14 +285,14 @@ FocusScope {
     Flickable {
         id: _scroller
         anchors {
-            top:          parent.top
-            left:         parent.left
-            right:        parent.right
-            bottom:       parent.bottom
-            topMargin:    vpx(56)
+            top: parent.top
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+            topMargin: vpx(56)
             bottomMargin: vpx(48)
-            leftMargin:   vpx(40)
-            rightMargin:  vpx(40)
+            leftMargin: vpx(40)
+            rightMargin: vpx(40)
         }
         clip: false
         interactive: true
@@ -303,9 +303,9 @@ FocusScope {
         Behavior on contentY { NumberAnimation { duration: 250; easing.type: Easing.OutQuad } }
 
         function ensureVisible(item) {
-            var yTop    = item.mapToItem(_content, 0, 0).y;
+            var yTop = item.mapToItem(_content, 0, 0).y;
             var yBottom = yTop + item.height;
-            var margin  = vpx(20);
+            var margin = vpx(20);
             if (yBottom + margin > contentY + height)
                 contentY = yBottom + margin - height;
             else if (yTop - margin < contentY)
@@ -329,7 +329,7 @@ FocusScope {
 
         Item {
             id: _content
-            width:  _scroller.width
+            width: _scroller.width
             implicitHeight: _recStrip.visible
             ? (_recStrip.y + _recStrip.height + vpx(20))
             : (_info.y + _info.height + vpx(20))
@@ -337,32 +337,32 @@ FocusScope {
             Text {
                 id: _label
                 anchors { top: parent.top; left: parent.left; topMargin: vpx(20) }
-                text:           "Recent Games"
+                text: "Recent Games"
                 font.pixelSize: vpx(32)
-                font.bold:      true
-                font.family:    global.fonts.sans
-                color:          "#ffffff"
-                opacity:        0.95
+                font.bold: true
+                font.family: global.fonts.sans
+                color: "#ffffff"
+                opacity: 0.95
             }
 
             ListView {
                 id: _strip
                 anchors {
-                    top:       _label.bottom
-                    left:      parent.left
-                    right:     parent.right
+                    top: _label.bottom
+                    left: parent.left
+                    right: parent.right
                     topMargin: vpx(14)
                 }
                 height: vpx(310)
 
-                orientation:           ListView.Horizontal
-                spacing:               vpx(20)
-                clip:                  false
-                focus:                 true
-                interactive:           false
+                orientation: ListView.Horizontal
+                spacing: vpx(16)
+                clip: false
+                focus: true
+                interactive: false
                 highlightMoveDuration: 0
-                highlightRangeMode:    ListView.NoHighlightRange
-                Binding on contentX    { value: 0 }
+                highlightRangeMode: ListView.NoHighlightRange
+                Binding on contentX { value: 0 }
 
                 model: root._totalSlots
 
@@ -370,59 +370,59 @@ FocusScope {
                     id: _cell
 
                     readonly property bool _isViewMore: index >= root._recentCount
-                    readonly property bool isCurrent:   ListView.isCurrentItem
-                    readonly property var  _game:       root._getGame(index)
-                    readonly property bool _isLarge:    index === 0
-                    readonly property real _cardW:      _isLarge ? vpx(560) : vpx(195)
+                    readonly property bool isCurrent: ListView.isCurrentItem
+                    readonly property var _game: root._getGame(index)
+                    readonly property bool _isLarge: index === 0
+                    readonly property real _cardW: _isLarge ? vpx(530) : vpx(210)
 
-                    width:   _cardW
-                    height:  _strip.height
-                    scale:   isCurrent && _strip.activeFocus ? 1.05 : 1.0
+                    width: _cardW
+                    height: _strip.height
+                    scale: isCurrent && _strip.activeFocus ? 1.03 : 1.0
                     opacity: isCurrent ? 1.0 : (_strip.activeFocus ? 0.65 : 0.80)
-                    Behavior on scale   { NumberAnimation { duration: 120 } }
+                    Behavior on scale { NumberAnimation { duration: 120 } }
                     Behavior on opacity { NumberAnimation { duration: 150 } }
 
                     Image {
                         id: _art
                         anchors.fill: parent
-                        fillMode:     Image.PreserveAspectCrop
+                        fillMode: Image.PreserveAspectCrop
                         asynchronous: true
-                        smooth:       true
+                        smooth: true
                         source: {
                             if (_cell._isViewMore) return "";
                             var g = _cell._game;
                             if (!g) return "";
                             if (_cell._isLarge)
                                 return g.assets.banner || g.assets.steam
-                                || g.assets.background || g.assets.boxFront
-                                || g.assets.screenshot || "";
+                                || g.assets.background || g.assets.screenshot
+                                || g.assets.boxFront || "";
                             return g.assets.poster || g.assets.boxFront
                             || g.assets.screenshot || "";
                         }
                         Rectangle {
                             anchors.fill: parent
-                            color:        "#1c2533"
-                            visible:      parent.status !== Image.Ready || _cell._isViewMore
+                            color: "#1c2533"
+                            visible: parent.status !== Image.Ready || _cell._isViewMore
                         }
                     }
 
                     Rectangle {
                         anchors.fill: parent
-                        color:        _cell.isCurrent && _strip.activeFocus ? "#16202b" : "#26282a"
-                        visible:      _cell._isViewMore
+                        color: _cell.isCurrent && _strip.activeFocus ? "#16202b" : "#26282a"
+                        visible: _cell._isViewMore
                         Behavior on color { ColorAnimation { duration: 200 } }
                         Column {
                             anchors.centerIn: parent
                             spacing: vpx(8)
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                text:                "View more\nin your\nLibrary"
+                                text: "View more\nin your\nLibrary"
                                 horizontalAlignment: Text.AlignHCenter
-                                font.pixelSize:      vpx(22)
-                                font.bold:           true
-                                font.family:         global.fonts.sans
-                                color:               "white"
-                                lineHeight:          1.35
+                                font.pixelSize: vpx(22)
+                                font.bold: true
+                                font.family: global.fonts.sans
+                                color: "white"
+                                lineHeight: 1.35
                             }
                         }
                     }
@@ -430,7 +430,7 @@ FocusScope {
                     Item {
                         id: _glowSource
                         anchors.fill: parent
-                        visible:      false
+                        visible: false
                         Rectangle { anchors.fill: parent; color: _cell._isViewMore ? "#16202b" : "#1a1a1a" }
                         Image {
                             anchors.fill: parent; source: _art.source
@@ -440,44 +440,44 @@ FocusScope {
                     }
 
                     FastBlur {
-                        anchors.fill:      _glowSource
-                        anchors.margins:   vpx(-15)
-                        source:            _glowSource
-                        radius:            75
+                        anchors.fill: _glowSource
+                        anchors.margins: vpx(-15)
+                        source: _glowSource
+                        radius: 75
                         transparentBorder: true
-                        opacity:           _cell.isCurrent && _strip.activeFocus ? 0.40 : 0.0
+                        opacity: _cell.isCurrent && _strip.activeFocus ? 0.40 : 0.0
                         Behavior on opacity { NumberAnimation { duration: 180 } }
                     }
 
                     Item {
                         anchors {
-                            right:       parent.right
-                            top:         parent.top
+                            right: parent.right
+                            top: parent.top
                             rightMargin: vpx(6)
-                            topMargin:   vpx(6)
+                            topMargin: vpx(6)
                         }
-                        width:   vpx(26)
-                        height:  vpx(26)
+                        width: vpx(26)
+                        height: vpx(26)
                         visible: !_cell._isViewMore && (_cell._game ? _cell._game.favorite === true : false)
 
                         Rectangle {
                             anchors.fill: parent
-                            radius:       width / 2
-                            color:        Qt.rgba(0, 0, 0, 0.70)
+                            radius: width / 2
+                            color: Qt.rgba(0, 0, 0, 0.70)
                         }
                         Image {
                             id: _favIcon
                             anchors.centerIn: parent
-                            width:    vpx(18); height: vpx(18)
-                            source:   "assets/icons/favorite.svg"
+                            width: vpx(18); height: vpx(18)
+                            source: "assets/icons/favorite.svg"
                             fillMode: Image.PreserveAspectFit
-                            mipmap:   true; smooth: true
-                            visible:  false
+                            mipmap: true; smooth: true
+                            visible: false
                         }
                         ColorOverlay {
                             anchors.fill: _favIcon
-                            source:       _favIcon
-                            color:        "#00ff08"
+                            source: _favIcon
+                            color: "#00ff08"
                         }
                     }
 
@@ -486,14 +486,14 @@ FocusScope {
                         anchors.fill: parent
                         property real borderExtra: 0
                         anchors.margins: vpx(-3.5) - borderExtra
-                        border.width:    vpx(1.5) + borderExtra
-                        border.color:    _cell._isViewMore ? "#7eb4d4" : "#c7c7c7"
-                        color:    "transparent"
-                        opacity:  0
+                        border.width: vpx(1.5) + borderExtra
+                        border.color: _cell._isViewMore ? "#7eb4d4" : "#c7c7c7"
+                        color: "transparent"
+                        opacity: 0
 
                         SequentialAnimation on opacity {
                             running: _cell.isCurrent && _strip.activeFocus
-                            loops:   Animation.Infinite
+                            loops: Animation.Infinite
                             NumberAnimation { to: 0.8; duration: 600; easing.type: Easing.InOutQuad }
                             NumberAnimation { to: 0.3; duration: 600; easing.type: Easing.InOutQuad }
                             onStopped: _selRect.opacity = 0
@@ -501,7 +501,7 @@ FocusScope {
                         SequentialAnimation on borderExtra {
                             id: _borderPulse; running: false
                             NumberAnimation { to: vpx(3.5); duration: 150; easing.type: Easing.OutQuad }
-                            NumberAnimation { to: 0;        duration: 250; easing.type: Easing.InQuad }
+                            NumberAnimation { to: 0; duration: 250; easing.type: Easing.InQuad }
                         }
                     }
 
@@ -509,15 +509,15 @@ FocusScope {
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked:       { _strip.currentIndex = index; _strip.forceActiveFocus(); }
+                        onClicked: { _strip.currentIndex = index; _strip.forceActiveFocus(); }
                         onDoubleClicked: { if (_cell._isViewMore) root.goToLibrary(); else if (_cell._game) _cell._game.launch(); }
                     }
                 }
 
-                Keys.onLeftPressed:  { if (currentIndex > 0)         currentIndex--; event.accepted = true; }
+                Keys.onLeftPressed: { if (currentIndex > 0) currentIndex--; event.accepted = true; }
                 Keys.onRightPressed: { if (currentIndex < count - 1) currentIndex++; event.accepted = true; }
-                Keys.onUpPressed:    { event.accepted = true; root.focusSearchRequested(); }
-                Keys.onDownPressed:  {
+                Keys.onUpPressed: { event.accepted = true; root.focusSearchRequested(); }
+                Keys.onDownPressed: {
                     event.accepted = true;
                     if (root._recGames.length > 0) _recStrip.forceActiveFocus();
                 }
@@ -525,7 +525,7 @@ FocusScope {
                 Keys.onPressed: {
                     if (!event.isAutoRepeat && api.keys.isAccept(event)) {
                         event.accepted = true;
-                        if (root.onViewMore)       root.goToLibrary();
+                        if (root.onViewMore) root.goToLibrary();
                         else if (root.currentGame) root.currentGame.launch();
                         return;
                     }
@@ -554,19 +554,19 @@ FocusScope {
             Item {
                 id: _info
                 anchors { left: parent.left; top: _strip.bottom; topMargin: vpx(14) }
-                width:  vpx(460)
+                width: vpx(460)
                 height: vpx(52)
 
                 Text {
                     id: _titleText
                     anchors { top: parent.top; left: parent.left }
-                    text:           root.onViewMore ? "Access your game library" : root.currentTitle
+                    text: root.onViewMore ? "Access your game library" : root.currentTitle
                     font.pixelSize: vpx(20)
-                    font.bold:      true
-                    font.family:    global.fonts.sans
-                    color:          "#ffffff"
-                    elide:          Text.ElideRight
-                    width:          parent.width
+                    font.bold: true
+                    font.family: global.fonts.sans
+                    color: "#ffffff"
+                    elide: Text.ElideRight
+                    width: parent.width
                 }
 
                 Row {
@@ -583,8 +583,8 @@ FocusScope {
                             var lp = root.currentLastPlayed;
                             var pt = root.currentPlaytime;
                             if (lp !== "" && pt !== "") return lp + ": " + pt;
-                            if (pt !== "")              return "PLAYTIME: " + pt;
-                            if (lp !== "")              return lp;
+                            if (pt !== "") return "PLAYTIME: " + pt;
+                            if (lp !== "") return lp;
                             return "";
                         }
                         font.pixelSize: vpx(12); font.bold: true
@@ -596,71 +596,71 @@ FocusScope {
             Text {
                 id: _recLabel
                 anchors { top: _info.bottom; left: parent.left; topMargin: vpx(28) }
-                text:           "Recommended"
+                text: "Recommended"
                 font.pixelSize: vpx(32)
-                font.bold:      true
-                font.family:    global.fonts.sans
-                color:          "#ffffff"
-                opacity:        0.95
-                visible:        root._recGames.length > 0
+                font.bold: true
+                font.family: global.fonts.sans
+                color: "#ffffff"
+                opacity: 0.95
+                visible: root._recGames.length > 0
             }
 
             ListView {
                 id: _recStrip
                 anchors {
-                    top:       _recLabel.bottom
-                    left:      parent.left
-                    right:     parent.right
+                    top: _recLabel.bottom
+                    left: parent.left
+                    right: parent.right
                     topMargin: vpx(14)
                 }
-                height:  vpx(260)
+                height: vpx(260)
                 visible: root._recGames.length > 0
 
-                orientation:           ListView.Horizontal
-                spacing:               vpx(16)
+                orientation: ListView.Horizontal
+                spacing: vpx(16)
                 clip: false
-                focus:                 false
-                interactive:           false
+                focus: false
+                interactive: false
                 highlightMoveDuration: 0
-                highlightRangeMode:    ListView.NoHighlightRange
-                Binding on contentX    { value: 0 }
+                highlightRangeMode: ListView.NoHighlightRange
+                Binding on contentX { value: 0 }
 
                 model: root._recGames.length
 
                 readonly property real cardW: (width - vpx(16) * 3) / 4
-                readonly property real imgH:  Math.round(height * 0.48)
+                readonly property real imgH: Math.round(height * 0.48)
 
                 delegate: Item {
                     id: _rc
 
                     readonly property bool isCurrent: ListView.isCurrentItem
-                    readonly property var  _game:     root._recGames[index] || null
+                    readonly property var _game: root._recGames[index] || null
                     readonly property string _reason: root._recReasons[index] || ""
 
-                    width:   _recStrip.cardW
-                    height:  _recStrip.height
-                    scale:   isCurrent && _recStrip.activeFocus ? 1.05 : 1.0
+                    width: _recStrip.cardW
+                    height: _recStrip.height
+                    scale: isCurrent && _recStrip.activeFocus ? 1.05 : 1.0
                     opacity: isCurrent ? 1.0 : (_recStrip.activeFocus ? 0.65 : 0.80)
-                    Behavior on scale   { NumberAnimation { duration: 120 } }
+                    Behavior on scale { NumberAnimation { duration: 120 } }
                     Behavior on opacity { NumberAnimation { duration: 150 } }
 
                     Item {
                         id: _rcImgArea
                         anchors { top: parent.top; left: parent.left; right: parent.right }
                         height: _recStrip.imgH
-                        clip:   false
+                        clip: false
 
                         Image {
                             id: _rcArt
                             anchors.fill: parent
-                            fillMode:     Image.PreserveAspectCrop
+                            fillMode: Image.PreserveAspectCrop
                             asynchronous: true
-                            smooth:       true
+                            smooth: true
                             source: {
                                 var g = _rc._game;
                                 if (!g) return "";
                                 return g.assets.background || g.assets.screenshot
-                                || g.assets.banner     || g.assets.titlescreen || "";
+                                || g.assets.banner || g.assets.titlescreen || "";
                             }
                             Rectangle {
                                 anchors.fill: parent; color: "#1c2533"
@@ -677,62 +677,62 @@ FocusScope {
 
                             Image {
                                 id: _rcLogo
-                                anchors.fill:        parent
-                                fillMode:            Image.PreserveAspectFit
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectFit
                                 horizontalAlignment: Image.AlignLeft
-                                verticalAlignment:   Image.AlignVCenter
-                                asynchronous:        true
-                                smooth:              true
-                                source:              _rc._game ? (_rc._game.assets.logo || "") : ""
-                                visible:             status === Image.Ready && source !== ""
+                                verticalAlignment: Image.AlignVCenter
+                                asynchronous: true
+                                smooth: true
+                                source: _rc._game ? (_rc._game.assets.logo || "") : ""
+                                visible: status === Image.Ready && source !== ""
                             }
 
                             Text {
-                                anchors.fill:      parent
+                                anchors.fill: parent
                                 verticalAlignment: Text.AlignVCenter
-                                text:              _rc._game ? _rc._game.title : ""
-                                font.pixelSize:    vpx(12)
-                                font.bold:         true
-                                font.family:       global.fonts.sans
-                                color:             "#ffffff"
-                                elide:             Text.ElideRight
-                                wrapMode:          Text.WordWrap
-                                maximumLineCount:  2
-                                style:             Text.Outline
-                                styleColor:        "#40000000"
-                                visible:           !_rcLogo.visible
+                                text: _rc._game ? _rc._game.title : ""
+                                font.pixelSize: vpx(12)
+                                font.bold: true
+                                font.family: global.fonts.sans
+                                color: "#ffffff"
+                                elide: Text.ElideRight
+                                wrapMode: Text.WordWrap
+                                maximumLineCount: 2
+                                style: Text.Outline
+                                styleColor: "#40000000"
+                                visible: !_rcLogo.visible
                             }
                         }
 
                         Item {
                             anchors {
-                                right:        parent.right
-                                top:          parent.top
-                                rightMargin:  vpx(4)
-                                topMargin:    vpx(4)
+                                right: parent.right
+                                top: parent.top
+                                rightMargin: vpx(4)
+                                topMargin: vpx(4)
                             }
-                            width:   vpx(26)
-                            height:  vpx(26)
+                            width: vpx(26)
+                            height: vpx(26)
                             visible: _rc._game ? (_rc._game.favorite === true) : false
 
                             Rectangle {
                                 anchors.fill: parent
-                                radius:       width / 2
-                                color:        Qt.rgba(0, 0, 0, 0.70)
+                                radius: width / 2
+                                color: Qt.rgba(0, 0, 0, 0.70)
                             }
                             Image {
                                 id: _rcFavIcon
                                 anchors.centerIn: parent
-                                width:    vpx(18); height: vpx(18)
-                                source:   "assets/icons/favorite.svg"
+                                width: vpx(18); height: vpx(18)
+                                source: "assets/icons/favorite.svg"
                                 fillMode: Image.PreserveAspectFit
-                                mipmap:   true
-                                visible:  false
+                                mipmap: true
+                                visible: false
                             }
                             ColorOverlay {
                                 anchors.fill: _rcFavIcon
-                                source:       _rcFavIcon
-                                color:        "#00ff08"
+                                source: _rcFavIcon
+                                color: "#00ff08"
                             }
                         }
                     }
@@ -740,8 +740,8 @@ FocusScope {
                     Rectangle {
                         id: _rcInfoPanel
                         anchors {
-                            top:   _rcImgArea.bottom
-                            left:  parent.left
+                            top: _rcImgArea.bottom
+                            left: parent.left
                             right: parent.right
                             bottom: parent.bottom
                         }
@@ -749,84 +749,84 @@ FocusScope {
 
                         Column {
                             anchors {
-                                left:         parent.left
-                                right:        parent.right
-                                top:          parent.top
-                                margins:      vpx(8)
-                                topMargin:    vpx(6)
+                                left: parent.left
+                                right: parent.right
+                                top: parent.top
+                                margins: vpx(8)
+                                topMargin: vpx(6)
                             }
                             spacing: vpx(2)
 
                             Text {
-                                width:            parent.width
-                                text:             _rc._game ? _rc._game.title : ""
-                                font.pixelSize:   vpx(16)
-                                font.bold:        true
-                                font.family:      global.fonts.sans
-                                color:            "#ffffff"
-                                elide:            Text.ElideRight
-                                visible:          _rcLogo.visible
+                                width: parent.width
+                                text: _rc._game ? _rc._game.title : ""
+                                font.pixelSize: vpx(16)
+                                font.bold: true
+                                font.family: global.fonts.sans
+                                color: "#ffffff"
+                                elide: Text.ElideRight
+                                visible: _rcLogo.visible
                             }
 
                             Rectangle {
                                 visible: _rc._reason !== ""
-                                width:   _reasonText.width + vpx(10)
-                                height:  vpx(17)
-                                radius:  vpx(3)
-                                color:   {
+                                width: _reasonText.width + vpx(10)
+                                height: vpx(17)
+                                radius: vpx(3)
+                                color: {
                                     var r = _rc._reason;
-                                    if (r === "In your favorites")   return "#1a3320";
+                                    if (r === "In your favorites") return "#1a3320";
                                     if (r === "Based on your taste") return "#1a2a3a";
-                                    if (r === "Highly rated")        return "#2a2010";
+                                    if (r === "Highly rated") return "#2a2010";
                                     return "#1a1f28";
                                 }
                                 Text {
                                     id: _reasonText
                                     anchors.centerIn: parent
-                                    text:           _rc._reason
+                                    text: _rc._reason
                                     font.pixelSize: vpx(10)
-                                    font.bold:      true
-                                    font.family:    global.fonts.sans
-                                    color:          {
+                                    font.bold: true
+                                    font.family: global.fonts.sans
+                                    color: {
                                         var r = _rc._reason;
-                                        if (r === "In your favorites")   return "#00e676";
+                                        if (r === "In your favorites") return "#00e676";
                                         if (r === "Based on your taste") return "#57cbde";
-                                        if (r === "Highly rated")        return "#f5c518";
+                                        if (r === "Highly rated") return "#f5c518";
                                         return "#7a8a94";
                                     }
                                 }
                             }
 
                             Text {
-                                width:          parent.width
-                                text:           _rc._game && _rc._game.developer !== ""
+                                width: parent.width
+                                text: _rc._game && _rc._game.developer !== ""
                                 ? _rc._game.developer : ""
                                 font.pixelSize: vpx(12)
-                                font.family:    global.fonts.sans
-                                color:          "#8ab4c8"
-                                elide:          Text.ElideRight
-                                visible:        text !== ""
+                                font.family: global.fonts.sans
+                                color: "#8ab4c8"
+                                elide: Text.ElideRight
+                                visible: text !== ""
                             }
 
                             Text {
-                                width:          parent.width
-                                text:           _rc._game && _rc._game.genre !== ""
+                                width: parent.width
+                                text: _rc._game && _rc._game.genre !== ""
                                 ? _rc._game.genre : ""
                                 font.pixelSize: vpx(12)
-                                font.family:    global.fonts.sans
-                                color:          "#7a8a94"
-                                elide:          Text.ElideRight
-                                visible:        text !== ""
+                                font.family: global.fonts.sans
+                                color: "#7a8a94"
+                                elide: Text.ElideRight
+                                visible: text !== ""
                             }
 
                             Rectangle {
-                                width:   parent.width
-                                height:  vpx(1)
-                                color:   "#22ffffff"
+                                width: parent.width
+                                height: vpx(1)
+                                color: "#22ffffff"
                             }
 
                             Row {
-                                width:   parent.width
+                                width: parent.width
                                 spacing: vpx(6)
 
                                 Row {
@@ -840,12 +840,12 @@ FocusScope {
                                             property real threshold: (index + 1) / 5
                                             property real r: _rc._game ? _rc._game.rating : 0
                                             property real half: threshold - 0.1
-                                            source:   r >= threshold ? "assets/icons/star1.png"
-                                            : r >= half      ? "assets/icons/star2.png"
-                                            :                  "assets/icons/star0.png"
-                                            width:    vpx(16); height: vpx(16)
+                                            source: r >= threshold ? "assets/icons/star1.png"
+                                            : r >= half ? "assets/icons/star2.png"
+                                            : "assets/icons/star0.png"
+                                            width: vpx(16); height: vpx(16)
                                             fillMode: Image.PreserveAspectFit
-                                            mipmap:   true; smooth: true
+                                            mipmap: true; smooth: true
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
                                     }
@@ -859,48 +859,48 @@ FocusScope {
                                     visible: _rc._game ? (_rc._game.playCount > 0) : false
 
                                     Text {
-                                        text:           "▶"
+                                        text: "▶"
                                         font.pixelSize: vpx(12)
-                                        color:          "#57cbde"
+                                        color: "#57cbde"
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
-                                        text:           _rc._game ? _rc._game.playCount + "×" : ""
+                                        text: _rc._game ? _rc._game.playCount + "×" : ""
                                         font.pixelSize: vpx(14)
-                                        font.family:    global.fonts.sans
-                                        color:          "#57cbde"
+                                        font.family: global.fonts.sans
+                                        color: "#57cbde"
                                     }
                                 }
 
                                 Rectangle {
-                                    width:   _neverText.width + vpx(8)
-                                    height:  vpx(18)
-                                    radius:  vpx(3)
-                                    color:   "#1a3a4a"
+                                    width: _neverText.width + vpx(8)
+                                    height: vpx(18)
+                                    radius: vpx(3)
+                                    color: "#1a3a4a"
                                     anchors.verticalCenter: parent.verticalCenter
                                     visible: _rc._game ? (_rc._game.playCount === 0) : false
 
                                     Text {
                                         id: _neverText
                                         anchors.centerIn: parent
-                                        text:           "NEW"
+                                        text: "NEW"
                                         font.pixelSize: vpx(12)
-                                        font.bold:      true
-                                        font.family:    global.fonts.sans
-                                        color:          "#57cbde"
+                                        font.bold: true
+                                        font.family: global.fonts.sans
+                                        color: "#57cbde"
                                     }
                                 }
                             }
 
                             Text {
-                                width:          parent.width
-                                text:           (_rc._game && _rc._game.collections.count > 0)
+                                width: parent.width
+                                text: (_rc._game && _rc._game.collections.count > 0)
                                 ? _rc._game.collections.get(0).name : ""
                                 font.pixelSize: vpx(12)
-                                font.family:    global.fonts.sans
-                                color:          "#556677"
-                                elide:          Text.ElideRight
-                                visible:        text !== ""
+                                font.family: global.fonts.sans
+                                color: "#556677"
+                                elide: Text.ElideRight
+                                visible: text !== ""
                             }
                         }
                     }
@@ -908,24 +908,24 @@ FocusScope {
                     Item {
                         id: _rcGlowSrc
                         anchors.fill: parent
-                        visible:      false
+                        visible: false
                         Rectangle { anchors.fill: parent; color: "#1a1a1a" }
                         Image {
                             anchors { top: parent.top; left: parent.left; right: parent.right }
                             height: _recStrip.imgH
-                            source:   _rcArt.source
+                            source: _rcArt.source
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true; smooth: true
                         }
                     }
 
                     FastBlur {
-                        anchors.fill:      _rcGlowSrc
-                        anchors.margins:   vpx(-14)
-                        source:            _rcGlowSrc
-                        radius:            70
+                        anchors.fill: _rcGlowSrc
+                        anchors.margins: vpx(-14)
+                        source: _rcGlowSrc
+                        radius: 70
                         transparentBorder: true
-                        opacity:           _rc.isCurrent && _recStrip.activeFocus ? 0.40 : 0.0
+                        opacity: _rc.isCurrent && _recStrip.activeFocus ? 0.40 : 0.0
                         Behavior on opacity { NumberAnimation { duration: 180 } }
                     }
 
@@ -934,14 +934,14 @@ FocusScope {
                         anchors.fill: parent
                         property real borderExtra: 0
                         anchors.margins: vpx(-3.5) - borderExtra
-                        border.width:    vpx(1.5) + borderExtra
+                        border.width: vpx(1.5) + borderExtra
                         border.color: "#c7c7c7"
                         color: "transparent"
                         opacity: 0
 
                         SequentialAnimation on opacity {
                             running: _rc.isCurrent && _recStrip.activeFocus
-                            loops:   Animation.Infinite
+                            loops: Animation.Infinite
                             NumberAnimation { to: 0.8; duration: 600; easing.type: Easing.InOutQuad }
                             NumberAnimation { to: 0.3; duration: 600; easing.type: Easing.InOutQuad }
                             onStopped: _rcSelRect.opacity = 0
@@ -949,7 +949,7 @@ FocusScope {
                         SequentialAnimation on borderExtra {
                             id: _rcBorderPulse; running: false
                             NumberAnimation { to: vpx(3.5); duration: 150; easing.type: Easing.OutQuad }
-                            NumberAnimation { to: 0;        duration: 250; easing.type: Easing.InQuad }
+                            NumberAnimation { to: 0; duration: 250; easing.type: Easing.InQuad }
                         }
                     }
 
@@ -957,15 +957,15 @@ FocusScope {
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked:       { _recStrip.currentIndex = index; _recStrip.forceActiveFocus(); }
+                        onClicked: { _recStrip.currentIndex = index; _recStrip.forceActiveFocus(); }
                         onDoubleClicked: { if (_rc._game) _rc._game.launch(); }
                     }
                 }
 
-                Keys.onLeftPressed:  { if (currentIndex > 0)         currentIndex--; event.accepted = true; }
+                Keys.onLeftPressed: { if (currentIndex > 0) currentIndex--; event.accepted = true; }
                 Keys.onRightPressed: { if (currentIndex < count - 1) currentIndex++; event.accepted = true; }
-                Keys.onUpPressed:    { event.accepted = true; _strip.forceActiveFocus(); }
-                Keys.onDownPressed:  { event.accepted = true; }
+                Keys.onUpPressed: { event.accepted = true; _strip.forceActiveFocus(); }
+                Keys.onDownPressed: { event.accepted = true; }
 
                 Keys.onPressed: {
                     if (!event.isAutoRepeat && api.keys.isAccept(event)) {
@@ -1002,22 +1002,22 @@ FocusScope {
 
     Text {
         anchors {
-            right:         parent.right
-            rightMargin:   vpx(40)
-            top:           parent.top
-            topMargin:     vpx(-20)
-            bottom:        parent.bottom
-            bottomMargin:  vpx(48)
+            right: parent.right
+            rightMargin: vpx(40)
+            top: parent.top
+            topMargin: vpx(-20)
+            bottom: parent.bottom
+            bottomMargin: vpx(48)
         }
-        width:            parent.width * 0.45
+        width: parent.width * 0.45
         verticalAlignment: Text.AlignVCenter
-        visible:          root._recentCount === 0
-        text:             "No games played yet.\nGo to your Library to start playing!"
+        visible: root._recentCount === 0
+        text: "No games played yet.\nGo to your Library to start playing!"
         horizontalAlignment: Text.AlignHCenter
-        font.pixelSize:   vpx(18)
-        font.family:      global.fonts.sans
-        color:            "#8b929a"
-        lineHeight:       1.5
+        font.pixelSize: vpx(18)
+        font.family: global.fonts.sans
+        color: "#8b929a"
+        lineHeight: 1.5
     }
 
     onFocusChanged: { if (focus) _strip.forceActiveFocus(); }
