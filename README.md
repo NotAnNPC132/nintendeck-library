@@ -2,11 +2,13 @@
 
 -  A theme for Pegasus Frontend, inspired by the Big Picture Library.
 
-![screen0](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/0.png)
+![screen0](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/4.png)
 
-![screen1](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/1.png)
+![screen1](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/0.png)
 
-![screen2](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/2.png)
+![screen2](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/1.png)
+
+![screen3](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/2.png)
 
 ![screen3](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/3.png)
 
