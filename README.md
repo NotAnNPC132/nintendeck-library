@@ -10,7 +10,7 @@
 
 ![screen3](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/2.png)
 
-![screen3](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/3.png)
+![screen4](https://github.com/ZagonAb/wtf-library/blob/ce93b68f377879167edbdd7fbe534471244fa8e7/.meta/screenshots/3.png)
 
 # RetroArch Monochrome Icons
 
