@@ -225,6 +225,7 @@ FocusScope {
                 anchors.fill: parent
                 propagateComposedEvents: true
                 onClicked: { parent.forceActiveFocus(); mouse.accepted = false; }
+                onPressed: mouse.accepted = false
             }
         }
 
