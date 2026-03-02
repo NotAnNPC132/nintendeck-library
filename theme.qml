@@ -28,7 +28,7 @@ FocusScope {
     Timer {
         id: _focusGridTimer
         interval: 0
-        repeat:   false
+        repeat: false
         onTriggered: {
             if (gameGridLoader.item) gameGridLoader.item.forceActiveFocus();
         }
@@ -43,7 +43,7 @@ FocusScope {
     Timer {
         id: _restoreSearchFocusTimer
         interval: 0
-        repeat:   false
+        repeat: false
         onTriggered: searchBar.activate()
     }
 
@@ -96,10 +96,10 @@ FocusScope {
                 var q = searchBar.searchQuery;
                 if (!q) return true;
                 var fields = [
-                    (model.title     || "").toLowerCase(),
+                    (model.title || "").toLowerCase(),
                     (model.developer || "").toLowerCase(),
                     (model.publisher || "").toLowerCase(),
-                    (model.genre     || "").toLowerCase()
+                    (model.genre || "").toLowerCase()
                 ];
                 for (var i = 0; i < fields.length; i++) {
                     if (fields[i].indexOf(q) !== -1) return true;
@@ -142,9 +142,9 @@ FocusScope {
     Rectangle {
         id: collecBarBg
         anchors { top: searchBar.bottom; left: parent.left; right: parent.right }
-        height:  collecBar.height + vpx(3)
-        z:       1000
-        color:   "#05070a"
+        height: collecBar.height + vpx(3)
+        z: 1000
+        color: "#05070a"
         opacity: root.onLibrary && gameGridLoader.item && gameGridLoader.item.contentY > vpx(10) ? 0.97 : 0.0
         Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.InOutQuad } }
     }
@@ -171,8 +171,8 @@ FocusScope {
             top: searchBar.bottom; left: parent.left; right: parent.right
             leftMargin: vpx(72); rightMargin: vpx(72)
         }
-        height:  vpx(56)
-        z:       1000
+        height: vpx(56)
+        z: 1000
         visible: root.onLibrary
         enabled: root.onLibrary
 
@@ -207,7 +207,7 @@ FocusScope {
 
             focus: root.onLibrary
 
-            gamesModel:    searchBar.isSearching ? searchResultModel : collecBar.currentGames
+            gamesModel: searchBar.isSearching ? searchResultModel : collecBar.currentGames
             isCollections: searchBar.isSearching ? false             : collecBar.currentIsCollections
 
             onPrevTabRequested: collecBar.prevTab()
@@ -266,12 +266,12 @@ FocusScope {
         id: bottomBar
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
         height: vpx(48)
-        z:      1002
+        z: 1002
 
-        activeView:    root._bottomActiveView
-        currentGame:   root._bottomGame
+        activeView: root._bottomActiveView
+        currentGame: root._bottomGame
         searchHasText: searchBar.hasText
-        isRootGrid:    root._bottomIsRoot
+        isRootGrid: root._bottomIsRoot
 
         onFavoriteClicked: {
             if (root.onHome && homeLoader.item) {

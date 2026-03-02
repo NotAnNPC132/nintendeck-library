@@ -4,7 +4,7 @@ import "Utils.js" as Utils
 FocusScope {
     id: root
 
-    property var  currentGames: api.allGames
+    property var currentGames: api.allGames
     property bool currentIsCollections: false
 
     signal focusUpRequested()
@@ -36,7 +36,7 @@ FocusScope {
         id: listView
 
         anchors.horizontalCenter: parent.horizontalCenter
-        width:  Math.min(contentWidth, parent.width)
+        width: Math.min(contentWidth, parent.width)
         height: vpx(56)
 
         interactive: false
@@ -50,16 +50,16 @@ FocusScope {
         delegate: Item {
             id: tabItem
 
-            property bool active:   ListView.isCurrentItem
+            property bool active: ListView.isCurrentItem
             property bool hasFocus: listView.activeFocus
-            property bool hovered:  hoverArea.containsMouse
+            property bool hovered: hoverArea.containsMouse
 
             width:  tabLabel.implicitWidth + vpx(48)
             height: listView.height
 
             Rectangle {
                 anchors.centerIn: parent
-                width:  tabLabel.implicitWidth + vpx(40)
+                width: tabLabel.implicitWidth + vpx(40)
                 height: vpx(40)
                 radius: vpx(20)
                 color: tabItem.active
@@ -92,7 +92,7 @@ FocusScope {
             }
         }
 
-        Keys.onLeftPressed:  if (currentIndex > 0) currentIndex--
+        Keys.onLeftPressed: if (currentIndex > 0) currentIndex--
         Keys.onRightPressed: if (currentIndex < model.count - 1) currentIndex++
 
         Keys.onUpPressed: {

@@ -4,51 +4,51 @@ import QtGraphicalEffects 1.15
 Rectangle {
     id: bottomBar
 
-    width:  parent.width
+    width: parent.width
     height: vpx(48)
-    color:  "#0b1117"
-    z:      1002
+    color: "#0b1117"
+    z: 1002
 
-    property string activeView:    "grid"
-    property var    currentGame:   null
-    property bool   searchHasText: false
-    property bool   isRootGrid:    false
+    property string activeView: "grid"
+    property var currentGame: null
+    property bool searchHasText: false
+    property bool isRootGrid: false
 
     signal favoriteClicked()
     signal playClicked()
     signal backClicked()
 
     readonly property bool showFavorite: activeView === "grid"
-    readonly property bool showPlay:     activeView === "grid"
-    readonly property bool isFav:        currentGame ? (currentGame.favorite === true) : false
+    readonly property bool showPlay: activeView === "grid"
+    readonly property bool isFav: currentGame ? (currentGame.favorite === true) : false
 
     readonly property string bLabel: {
-        if (activeView === "search" && searchHasText)  return "BACKSPACE";
-        if (activeView === "grid"   && isRootGrid)     return "EXIT";
-        if (activeView === "home_viewmore")             return "EXIT";
+        if (activeView === "search" && searchHasText) return "BACKSPACE";
+        if (activeView === "grid" && isRootGrid) return "EXIT";
+        if (activeView === "home_viewmore") return "EXIT";
         return "BACK";
     }
 
     Image {
         id: logoIcon
         anchors {
-            left:           parent.left
-            leftMargin:     vpx(18)
+            left: parent.left
+            leftMargin: vpx(18)
             verticalCenter: parent.verticalCenter
         }
-        width:    vpx(40)
-        height:   vpx(40)
-        source:   "assets/icons/icon_0.png"
+        width: vpx(40)
+        height: vpx(40)
+        source: "assets/icons/icon_0.png"
         fillMode: Image.PreserveAspectFit
-        mipmap:   true
-        smooth:   true
+        mipmap: true
+        smooth: true
     }
 
     Row {
         id: btnRow
         anchors {
-            right:          parent.right
-            rightMargin:    vpx(20)
+            right: parent.right
+            rightMargin: vpx(20)
             verticalCenter: parent.verticalCenter
         }
         spacing: vpx(8)
@@ -56,14 +56,14 @@ Rectangle {
         Item {
             id: btnFav
             visible: bottomBar.showFavorite
-            height:  vpx(36)
-            width:   favInner.implicitWidth + vpx(20)
+            height: vpx(36)
+            width: favInner.implicitWidth + vpx(20)
 
             Rectangle {
                 anchors.fill: parent
-                color:   "#ffffff"
+                color: "#ffffff"
                 opacity: favHover.containsMouse ? 0.07 : 0.0
-                radius:  vpx(4)
+                radius: vpx(4)
                 Behavior on opacity { NumberAnimation { duration: 120 } }
             }
             Row {
@@ -92,22 +92,22 @@ Rectangle {
                 id: favHover
                 anchors.fill: parent
                 hoverEnabled: true
-                cursorShape:  Qt.PointingHandCursor
-                onClicked:    bottomBar.favoriteClicked()
+                cursorShape: Qt.PointingHandCursor
+                onClicked: bottomBar.favoriteClicked()
             }
         }
 
         Item {
             id: btnPlay
             visible: bottomBar.showPlay
-            height:  vpx(36)
-            width:   playInner.implicitWidth + vpx(20)
+            height: vpx(36)
+            width: playInner.implicitWidth + vpx(20)
 
             Rectangle {
                 anchors.fill: parent
-                color:   "#ffffff"
+                color: "#ffffff"
                 opacity: playHover.containsMouse ? 0.07 : 0.0
-                radius:  vpx(4)
+                radius: vpx(4)
                 Behavior on opacity { NumberAnimation { duration: 120 } }
             }
             Row {
@@ -123,11 +123,11 @@ Rectangle {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text:           "PLAY"
-                    color:          "#ffffff"
-                    font.family:    global.fonts.sans
+                    text: "PLAY"
+                    color: "#ffffff"
+                    font.family: global.fonts.sans
                     font.pixelSize: vpx(13)
-                    font.bold:      true
+                    font.bold: true
                     font.letterSpacing: vpx(0.6)
                 }
             }
@@ -135,21 +135,21 @@ Rectangle {
                 id: playHover
                 anchors.fill: parent
                 hoverEnabled: true
-                cursorShape:  Qt.PointingHandCursor
-                onClicked:    bottomBar.playClicked()
+                cursorShape: Qt.PointingHandCursor
+                onClicked: bottomBar.playClicked()
             }
         }
 
         Item {
             id: btnBack
             height: vpx(36)
-            width:  backInner.implicitWidth + vpx(20)
+            width: backInner.implicitWidth + vpx(20)
 
             Rectangle {
                 anchors.fill: parent
-                color:   "#ffffff"
+                color: "#ffffff"
                 opacity: backHover.containsMouse ? 0.07 : 0.0
-                radius:  vpx(4)
+                radius: vpx(4)
                 Behavior on opacity { NumberAnimation { duration: 120 } }
             }
             Row {
@@ -165,11 +165,11 @@ Rectangle {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text:           bottomBar.bLabel
-                    color:          "#ffffff"
-                    font.family:    global.fonts.sans
+                    text: bottomBar.bLabel
+                    color: "#ffffff"
+                    font.family: global.fonts.sans
                     font.pixelSize: vpx(13)
-                    font.bold:      true
+                    font.bold: true
                     font.letterSpacing: vpx(0.6)
                 }
             }
@@ -177,8 +177,8 @@ Rectangle {
                 id: backHover
                 anchors.fill: parent
                 hoverEnabled: true
-                cursorShape:  Qt.PointingHandCursor
-                onClicked:    bottomBar.backClicked()
+                cursorShape: Qt.PointingHandCursor
+                onClicked: bottomBar.backClicked()
             }
         }
     }

@@ -9,7 +9,7 @@ Item {
 
     signal clicked()
 
-    implicitWidth:  vpx(52)
+    implicitWidth: vpx(52)
     implicitHeight: vpx(44)
 
     Canvas {
@@ -52,7 +52,7 @@ Item {
     Text {
         anchors.centerIn: parent
         anchors.verticalCenterOffset: root.isActive ? vpx(1) : 0
-        text:  root.label
+        text: root.label
         color: "#020508"
         font.pixelSize: vpx(22)
         font.bold:      true
@@ -62,13 +62,13 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        onPressed:  { root.isActive = true;  bg.requestPaint() }
+        onPressed: { root.isActive = true;  bg.requestPaint() }
         onReleased: { root.isActive = false; bg.requestPaint(); root.clicked() }
         onCanceled: { root.isActive = false; bg.requestPaint() }
     }
 
     onIsActiveChanged: bg.requestPaint()
-    onWidthChanged:    bg.requestPaint()
-    onHeightChanged:   bg.requestPaint()
-    onVisibleChanged:   if (visible) bg.requestPaint()
+    onWidthChanged: bg.requestPaint()
+    onHeightChanged: bg.requestPaint()
+    onVisibleChanged: if (visible) bg.requestPaint()
 }

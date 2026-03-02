@@ -17,13 +17,13 @@ Item {
     readonly property bool hasFocus:  inputField.activeFocus
     readonly property bool hasText:   inputField.text.length > 0
 
-    readonly property color _bgDark:      "#05070a"
-    readonly property color _bgLight:     "#ffffff"
-    readonly property color _iconIdle:    "#ffffff"
-    readonly property color _iconActive:  "#c6d4df"
-    readonly property color _textColor:   "#c6d4df"
+    readonly property color _bgDark: "#05070a"
+    readonly property color _bgLight: "#ffffff"
+    readonly property color _iconIdle: "#ffffff"
+    readonly property color _iconActive: "#c6d4df"
+    readonly property color _textColor: "#c6d4df"
     readonly property color _placeholder: "#8b929a"
-    readonly property color _clockColor:  "#ffffff"
+    readonly property color _clockColor: "#ffffff"
     readonly property color _currentIconColor: isActive ? "#000000" : _iconIdle
     readonly property color _currentTextColor: isActive ? "#000000" : _textColor
     readonly property color _currentPlaceholder: isActive ? "#000000" : _placeholder
@@ -31,7 +31,7 @@ Item {
     Timer {
         id: debounceTimer
         interval: 250
-        repeat:   false
+        repeat: false
         onTriggered: root.committedQuery = Utils.normalizeForSearch(inputField.text)
     }
 
@@ -62,7 +62,7 @@ Item {
             ? 1.0
             : (root.gameGridContentY > vpx(10) ? 0.97 : 0.0))
 
-            Behavior on color   { ColorAnimation  { duration: 300; easing.type: Easing.InOutQuad } }
+            Behavior on color { ColorAnimation  { duration: 300; easing.type: Easing.InOutQuad } }
             Behavior on opacity { NumberAnimation  { duration: 450; easing.type: Easing.InOutQuad } }
         }
 
@@ -149,7 +149,7 @@ Item {
             Text {
                 anchors.fill: parent
                 text: "Search for games..."
-                color:root._currentPlaceholder
+                color: root._currentPlaceholder
                 font: inputField.font
                 visible: inputField.text.length === 0
                 elide: Text.ElideRight
@@ -186,12 +186,12 @@ Item {
         Item {
             id: clearBtn
             anchors {
-                right:          parent.right
-                rightMargin:    vpx(14)
+                right: parent.right
+                rightMargin: vpx(14)
                 verticalCenter: parent.verticalCenter
             }
-            width:   vpx(18)
-            height:  vpx(18)
+            width: vpx(18)
+            height: vpx(18)
             visible: inputField.text.length > 0
             opacity: clearMouse.containsMouse ? 1.0 : 0.55
             Behavior on opacity { NumberAnimation { duration: 120 } }
@@ -242,31 +242,31 @@ Item {
         color: root.isActive ? root._bgDark : "transparent"
 
         anchors {
-            top:    parent.top
+            top: parent.top
             bottom: parent.bottom
-            left:   searchZone.right
-            right:  parent.right
+            left: searchZone.right
+            right: parent.right
         }
 
         Rectangle {
             id: clockBg
             anchors.fill: parent
             z: -1
-            color:   "#05070a"
+            color: "#05070a"
             opacity: root.gameGridContentY > vpx(10) ? 0.97 : 0.0
             Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.InOutQuad } }
         }
 
         Timer {
             id: clockTimer
-            interval:         1000
-            repeat:           true
-            running:          true
+            interval: 1000
+            repeat: true
+            running: true
             triggeredOnStart: true
             onTriggered: {
-                var now  = new Date();
-                var h    = now.getHours();
-                var m    = ("0" + now.getMinutes()).slice(-2);
+                var now = new Date();
+                var h = now.getHours();
+                var m = ("0" + now.getMinutes()).slice(-2);
                 var ampm = h >= 12 ? "p.\u202fm." : "a.\u202fm.";
                 h = h % 12;
                 if (h === 0) h = 12;
@@ -281,28 +281,28 @@ Item {
                 rightMargin: vpx(10)
                 verticalCenter: parent.verticalCenter
             }
-            color:          root._clockColor
+            color: root._clockColor
             font.pixelSize: vpx(17)
-            font.family:    global.fonts.sans
+            font.family: global.fonts.sans
             font.bold: true
-            text:           "--:--"
+            text: "--:--"
         }
     }
 
     Rectangle {
         anchors { bottom: parent.bottom; left: parent.left }
-        width:  parent.width * 0.80
+        width: parent.width * 0.80
         height: vpx(1)
-        color:   root.isActive ? Qt.rgba(0, 0, 0, 0.12) : "transparent"
+        color: root.isActive ? Qt.rgba(0, 0, 0, 0.12) : "transparent"
         opacity: root.isActive ? 1.0 : (root.gameGridContentY > vpx(10) ? 0.97 : 0.0)
         Behavior on color   { ColorAnimation  { duration: 300 } }
         Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.InOutQuad } }
     }
 
-    function activate()      { inputField.forceActiveFocus(); }
-    function clearSearch()   { inputField.text = ""; }
+    function activate() { inputField.forceActiveFocus(); }
+    function clearSearch() { inputField.text = ""; }
 
-    function backspaceOne()  {
+    function backspaceOne() {
         if (inputField.text.length > 0)
             inputField.text = inputField.text.slice(0, -1);
         else

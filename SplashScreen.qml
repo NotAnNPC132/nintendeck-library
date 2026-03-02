@@ -4,7 +4,7 @@ import QtGraphicalEffects 1.15
 Rectangle {
     id: root
 
-    color:   "#0b1117"
+    color: "#0b1117"
     visible: opacity > 0
     opacity: 1.0
 
@@ -19,18 +19,18 @@ Rectangle {
         Image {
             id: splashLogo
             anchors.horizontalCenter: parent.horizontalCenter
-            source:   "assets/icons/icon_0.png"
-            width:    vpx(160)
-            height:   vpx(160)
+            source: "assets/icons/icon_0.png"
+            width: vpx(160)
+            height: vpx(160)
             fillMode: Image.PreserveAspectFit
-            mipmap:   true
+            mipmap: true
 
             layer.enabled: true
             layer.effect: Glow {
                 samples: 100
-                color:   Qt.rgba(156/255, 156/255, 156/255, 0.1)
-                spread:  0.1
-                radius:  80
+                color: Qt.rgba(156/255, 156/255, 156/255, 0.1)
+                spread: 0.1
+                radius: 80
             }
 
             scale: 1.0
@@ -43,17 +43,17 @@ Rectangle {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text:           "Loading...."
-            color:          "#ffffff"
-            font.family:    global.fonts.sans
+            text: "Loading...."
+            color: "#ffffff"
+            font.family: global.fonts.sans
             font.pixelSize: vpx(36)
 
             layer.enabled: true
             layer.effect: Glow {
                 samples: 100
-                color:   Qt.rgba(156/255, 156/255, 156/255, 0.1)
-                spread:  0.1
-                radius:  80
+                color: Qt.rgba(156/255, 156/255, 156/255, 0.1)
+                spread: 0.1
+                radius: 80
             }
 
             opacity: 0.8

@@ -60,15 +60,15 @@ FocusScope {
         id: grid
 
         anchors {
-            top:    parent.top
-            left:   parent.left
-            right:  parent.right
+            top: parent.top
+            left: parent.left
+            right: parent.right
             bottom: parent.bottom
             bottomMargin: vpx(10)
         }
 
         focus: true
-        clip:  false
+        clip: false
 
         model: root.effectiveModel
         cellWidth: root.cellWidth
@@ -82,7 +82,7 @@ FocusScope {
             width: root.cellWidth
             height: root.cellHeight
 
-            property var  entry: modelData
+            property var entry: modelData
             property bool isCurrent: GridView.isCurrentItem
 
             readonly property bool isGame: !root.showingCollectionList
@@ -191,11 +191,11 @@ FocusScope {
 
             Text {
                 anchors {
-                    left:         cover.left
-                    right:        cover.right
-                    bottom:       cover.bottom
-                    leftMargin:   vpx(6)
-                    rightMargin:  vpx(6)
+                    left: cover.left
+                    right: cover.right
+                    bottom: cover.bottom
+                    leftMargin: vpx(6)
+                    rightMargin: vpx(6)
                     bottomMargin: vpx(8)
                 }
                 visible: root.showingCollectionList
@@ -213,37 +213,36 @@ FocusScope {
             Item {
                 id: favBadge
                 anchors {
-                    right:        cover.right
-                    bottom:       cover.bottom
-                    rightMargin:  vpx(2)
+                    right: cover.right
+                    bottom: cover.bottom
+                    rightMargin: vpx(2)
                     bottomMargin: vpx(2)
                 }
-                width:   vpx(32)
-                height:  vpx(32)
+                width: vpx(32)
+                height: vpx(32)
                 visible: cell.isGame && cell.entry && cell.entry.favorite === true
 
                 Rectangle {
                     anchors.fill: parent
-                    radius:       width / 2
-                    color:        Qt.rgba(0, 0, 0, 0.70)
+                    radius:  width / 2
+                    color: Qt.rgba(0, 0, 0, 0.70)
                 }
 
                 Image {
                     id: favIconSrc
                     anchors.centerIn: parent
-                    width:    vpx(25)
-                    height:   vpx(25)
-                    source:   "assets/icons/favorite.svg"
+                    width: vpx(25)
+                    height: vpx(25)
+                    source: "assets/icons/favorite.svg"
                     fillMode: Image.PreserveAspectFit
-                    mipmap:   true
-                    smooth:   true
-                    visible:  false
+                    mipmap: true
+                    visible: false
                 }
 
                 ColorOverlay {
                     anchors.fill: favIconSrc
-                    source:       favIconSrc
-                    color:        "#00ff08"
+                    source: favIconSrc
+                    color: "#00ff08"
                 }
             }
 
@@ -286,7 +285,7 @@ FocusScope {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked:       grid.currentIndex = index
+                onClicked: grid.currentIndex = index
                 onDoubleClicked: root.activateEntry(cell.entry)
             }
         }
