@@ -6,6 +6,7 @@ FocusScope {
 
     property var currentGames: api.allGames
     property bool currentIsCollections: false
+    property string currentShortName: ""
 
     signal focusUpRequested()
 
@@ -26,6 +27,7 @@ FocusScope {
         var entry = collecModel.model.get(index);
         if (!entry) return;
         currentIsCollections = entry.isCollections;
+        currentShortName = entry.shortName || "";
         if (!entry.isCollections)
             currentGames = entry.games;
     }

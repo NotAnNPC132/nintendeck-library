@@ -17,6 +17,9 @@ Rectangle {
     signal favoriteClicked()
     signal playClicked()
     signal backClicked()
+    signal filterClicked()
+
+    property bool showFilter: false
 
     readonly property bool showFavorite: activeView === "grid"
     readonly property bool showPlay: activeView === "grid"
@@ -137,6 +140,49 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: bottomBar.playClicked()
+            }
+        }
+
+        Item {
+            id: btnFilter
+            visible: bottomBar.showFilter
+            height: vpx(36)
+            width: filterInner.implicitWidth + vpx(20)
+
+            Rectangle {
+                anchors.fill: parent
+                color: "#ffffff"
+                opacity: filterHover.containsMouse ? 0.07 : 0.0
+                radius: vpx(4)
+                Behavior on opacity { NumberAnimation { duration: 120 } }
+            }
+            Row {
+                id: filterInner
+                anchors.centerIn: parent
+                spacing: vpx(7)
+                Image {
+                    width: vpx(35); height: vpx(35)
+                    anchors.verticalCenter: parent.verticalCenter
+                    source: "assets/icons/y.png"
+                    fillMode: Image.PreserveAspectFit
+                    mipmap: true; smooth: true
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "SORT BY"
+                    color: "#ffffff"
+                    font.family: global.fonts.sans
+                    font.pixelSize: vpx(13)
+                    font.bold: true
+                    font.letterSpacing: vpx(0.6)
+                }
+            }
+            MouseArea {
+                id: filterHover
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: bottomBar.filterClicked()
             }
         }
 
