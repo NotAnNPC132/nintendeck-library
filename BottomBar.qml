@@ -22,7 +22,7 @@ Rectangle {
     property bool showFilter: false
 
     readonly property bool showFavorite: activeView === "grid"
-    readonly property bool showPlay: activeView === "grid"
+    readonly property bool showPlay: activeView === "grid" || activeView === "collections"
     readonly property bool isFav: currentGame ? (currentGame.favorite === true) : false
 
     readonly property string bLabel: {
@@ -126,7 +126,7 @@ Rectangle {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "PLAY"
+                    text: bottomBar.activeView === "collections" ? "OK" : "PLAY"
                     color: "#ffffff"
                     font.family: global.fonts.sans
                     font.pixelSize: vpx(13)
