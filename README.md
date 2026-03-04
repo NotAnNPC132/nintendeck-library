@@ -2,6 +2,8 @@
 
 -  A theme for Pegasus Frontend, inspired by the Big Picture Library.
 
+> 📢 There will be many updates constantly, until a final version 1.0 is declared in the theme.cfg file. 👀
+
 ![screen0](https://github.com/ZagonAb/wtf-library/blob/1a1a4ef91c7f7cfbe180eb643daaf1ea8140e642/.meta/screenshots/0.png)
 
 ![screen1](https://github.com/ZagonAb/wtf-library/blob/1a1a4ef91c7f7cfbe180eb643daaf1ea8140e642/.meta/screenshots/1.png)
