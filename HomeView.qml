@@ -8,6 +8,7 @@ FocusScope {
 
     signal goToLibrary()
     signal focusSearchRequested()
+    signal openHub(var game)
 
     readonly property var currentGame: _strip.currentIndex < _recentCount
     ? _getGame(_strip.currentIndex) : null
@@ -510,7 +511,7 @@ FocusScope {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: { _strip.currentIndex = index; _strip.forceActiveFocus(); }
-                        onDoubleClicked: { if (_cell._isViewMore) root.goToLibrary(); else if (_cell._game) _cell._game.launch(); }
+                        onDoubleClicked: { if (_cell._isViewMore) root.goToLibrary(); else if (_cell._game) root.openHub(_cell._game); }
                     }
                 }
 
@@ -526,7 +527,7 @@ FocusScope {
                     if (!event.isAutoRepeat && api.keys.isAccept(event)) {
                         event.accepted = true;
                         if (root.onViewMore) root.goToLibrary();
-                        else if (root.currentGame) root.currentGame.launch();
+                        else if (root.currentGame) root.openHub(root.currentGame);
                         return;
                     }
                     if (!event.isAutoRepeat && api.keys.isDetails(event)) {
@@ -958,7 +959,7 @@ FocusScope {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: { _recStrip.currentIndex = index; _recStrip.forceActiveFocus(); }
-                        onDoubleClicked: { if (_rc._game) _rc._game.launch(); }
+                        onDoubleClicked: { if (_rc._game) root.openHub(_rc._game); }
                     }
                 }
 
@@ -971,7 +972,7 @@ FocusScope {
                     if (!event.isAutoRepeat && api.keys.isAccept(event)) {
                         event.accepted = true;
                         var g = root._recGames[currentIndex];
-                        if (g) g.launch();
+                        if (g) root.openHub(g);
                         return;
                     }
                     if (!event.isAutoRepeat && api.keys.isDetails(event)) {

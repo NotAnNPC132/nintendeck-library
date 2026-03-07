@@ -57,6 +57,86 @@ function formatLastPlayed(date) {
     return "OVER A YEAR AGO";
 }
 
+var _genericHeaders = [
+    "introduccion", "introducción",
+    "descripcion", "descripción",
+    "caracteristicas", "características",
+    "caracteristicas principales", "características principales",
+    "acerca de este juego", "acerca del juego",
+    "sobre el juego", "sobre este juego",
+    "introduction", "description", "overview",
+    "about this game", "about the game",
+    "features", "main features", "key features",
+    "synopsis", "sinopsis", "summary"
+];
+
+function _stripHtml(text) {
+    var s = text;
+    s = s.replace(/<video[\s\S]*?<\/video>/gi, " ");
+    s = s.replace(/<span[\s\S]*?<\/span>/gi,   " ");
+    s = s.replace(/<br\s*\/?>/gi,               " ");
+    s = s.replace(/<[^>]+>/g,                   " ");
+    s = s.replace(/&amp;/g,  "&");
+    s = s.replace(/&lt;/g,   "<");
+    s = s.replace(/&gt;/g,   ">");
+    s = s.replace(/&nbsp;/g, " ");
+    s = s.replace(/&quot;/g, "\"");
+    s = s.replace(/&#39;/g,  "'");
+    s = s.replace(/\r\n|\r|\n/g, " ");
+    s = s.replace(/\s{2,}/g, " ");
+    return s.trim();
+}
+
+function _isGenericHeader(fragment) {
+    var l = fragment.toLowerCase().trim().replace(/[.:!?\-]+$/, "").replace(/^[\s]+/, "");
+    for (var i = 0; i < _genericHeaders.length; i++) {
+        if (l === _genericHeaders[i]) return true;
+    }
+    return false;
+}
+
+function truncateDescription(text) {
+    if (!text) return "";
+
+    var flat = _stripHtml(text);
+    if (flat.length === 0) return "";
+
+    var prefix = flat.substring(0, 80).toLowerCase();
+    for (var h = 0; h < _genericHeaders.length; h++) {
+        var hdr = _genericHeaders[h];
+        var idx = prefix.indexOf(hdr);
+        if (idx !== -1) {
+            var before = flat.substring(0, idx).trim();
+            if (before.length === 0) {
+                flat = flat.substring(idx + hdr.length).replace(/^[\s]+/, "").trim();
+                flat = flat.replace(/\s{2,}/g, " ");
+                break;
+            }
+        }
+    }
+
+    var result   = "";
+    var dotCount = 0;
+    var i = 0;
+    while (i < flat.length && dotCount < 2) {
+        var nextDot = flat.indexOf(".", i);
+        if (nextDot === -1) {
+            var rest = flat.substring(i).trim();
+            if (rest.length > 0 && !_isGenericHeader(rest))
+                result += (result.length > 0 ? " " : "") + rest;
+            break;
+        }
+        var sentence = flat.substring(i, nextDot + 1).trim();
+        if (!_isGenericHeader(sentence)) {
+            result += (result.length > 0 ? " " : "") + sentence;
+            dotCount++;
+        }
+        i = nextDot + 1;
+    }
+
+    return result.replace(/\s{2,}/g, " ").trim();
+}
+
 function gameMatchesSearch(game, query) {
     if (!query || query.length === 0) return true;
     var fields = [

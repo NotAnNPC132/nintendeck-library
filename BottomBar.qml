@@ -15,21 +15,38 @@ Rectangle {
     property bool isRootGrid: false
 
     signal favoriteClicked()
+    signal selectClicked()
     signal playClicked()
     signal backClicked()
     signal filterClicked()
 
     property bool showFilter: false
 
+    // Hub sub-state: synced from GameHubView via theme.qml
+    property int  hubActiveTab:  0   // 0 = GAME INFO, 1 = publisher, 2 = genre
+    property bool hubPlayFocus: false // true when the PLAY button has focus
+    property bool hubGridFocus: false // true when a publisher/genre grid has focus
+
     readonly property bool showFavorite: activeView === "grid"
-    readonly property bool showPlay: activeView === "grid" || activeView === "collections"
+                                      || (activeView === "hub" && hubGridFocus)
+    readonly property bool showSelect: activeView === "grid"
+                                    || activeView === "collections"
+                                    || activeView === "home"
+                                    || (activeView === "hub" && (hubPlayFocus || hubActiveTab > 0))
     readonly property bool isFav: currentGame ? (currentGame.favorite === true) : false
 
     readonly property string bLabel: {
         if (activeView === "search" && searchHasText) return "BACKSPACE";
-        if (activeView === "grid" && isRootGrid) return "EXIT";
-        if (activeView === "home_viewmore") return "EXIT";
+        if (activeView === "grid" && isRootGrid)      return "EXIT";
+        if (activeView === "home_viewmore")            return "EXIT";
+        if (activeView === "hub")                      return "BACK";
         return "BACK";
+    }
+
+    readonly property string aLabel: {
+        if (activeView === "collections") return "OK";
+        if (activeView === "hub")         return hubPlayFocus ? "PLAY" : "SELECT";
+        return "SELECT";
     }
 
     Image {
@@ -69,10 +86,12 @@ Rectangle {
                 radius: vpx(4)
                 Behavior on opacity { NumberAnimation { duration: 120 } }
             }
+
             Row {
                 id: favInner
                 anchors.centerIn: parent
                 spacing: vpx(7)
+
                 Image {
                     width: vpx(35); height: vpx(35)
                     anchors.verticalCenter: parent.verticalCenter
@@ -80,6 +99,7 @@ Rectangle {
                     fillMode: Image.PreserveAspectFit
                     mipmap: true; smooth: true
                 }
+
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: bottomBar.isFav ? "REMOVE FAVORITE" : "ADD FAVORITE"
@@ -101,22 +121,24 @@ Rectangle {
         }
 
         Item {
-            id: btnPlay
-            visible: bottomBar.showPlay
+            id: btnSelect
+            visible: bottomBar.showSelect
             height: vpx(36)
-            width: playInner.implicitWidth + vpx(20)
+            width: selectInner.implicitWidth + vpx(20)
 
             Rectangle {
                 anchors.fill: parent
                 color: "#ffffff"
-                opacity: playHover.containsMouse ? 0.07 : 0.0
+                opacity: selectHover.containsMouse ? 0.07 : 0.0
                 radius: vpx(4)
                 Behavior on opacity { NumberAnimation { duration: 120 } }
             }
+
             Row {
-                id: playInner
+                id: selectInner
                 anchors.centerIn: parent
                 spacing: vpx(7)
+
                 Image {
                     width: vpx(35); height: vpx(35)
                     anchors.verticalCenter: parent.verticalCenter
@@ -124,9 +146,10 @@ Rectangle {
                     fillMode: Image.PreserveAspectFit
                     mipmap: true; smooth: true
                 }
+
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: bottomBar.activeView === "collections" ? "OK" : "PLAY"
+                    text: bottomBar.aLabel
                     color: "#ffffff"
                     font.family: global.fonts.sans
                     font.pixelSize: vpx(13)
@@ -134,12 +157,18 @@ Rectangle {
                     font.letterSpacing: vpx(0.6)
                 }
             }
+
             MouseArea {
-                id: playHover
+                id: selectHover
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: bottomBar.playClicked()
+                onClicked: {
+                    if (bottomBar.activeView === "hub")
+                        bottomBar.playClicked();
+                    else
+                        bottomBar.selectClicked();
+                }
             }
         }
 
@@ -156,10 +185,12 @@ Rectangle {
                 radius: vpx(4)
                 Behavior on opacity { NumberAnimation { duration: 120 } }
             }
+
             Row {
                 id: filterInner
                 anchors.centerIn: parent
                 spacing: vpx(7)
+
                 Image {
                     width: vpx(35); height: vpx(35)
                     anchors.verticalCenter: parent.verticalCenter
@@ -167,6 +198,7 @@ Rectangle {
                     fillMode: Image.PreserveAspectFit
                     mipmap: true; smooth: true
                 }
+
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "SORT BY"
@@ -198,10 +230,12 @@ Rectangle {
                 radius: vpx(4)
                 Behavior on opacity { NumberAnimation { duration: 120 } }
             }
+
             Row {
                 id: backInner
                 anchors.centerIn: parent
                 spacing: vpx(7)
+
                 Image {
                     width: vpx(35); height: vpx(35)
                     anchors.verticalCenter: parent.verticalCenter
@@ -209,6 +243,7 @@ Rectangle {
                     fillMode: Image.PreserveAspectFit
                     mipmap: true; smooth: true
                 }
+
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: bottomBar.bLabel
@@ -219,6 +254,7 @@ Rectangle {
                     font.letterSpacing: vpx(0.6)
                 }
             }
+
             MouseArea {
                 id: backHover
                 anchors.fill: parent

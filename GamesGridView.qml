@@ -10,6 +10,7 @@ FocusScope {
     signal nextTabRequested()
     signal exitRequested()
     signal sortMenuRequested()
+    signal openHub(var game)
 
     property var  gamesModel: api.allGames
     property bool isCollections: false
@@ -174,6 +175,21 @@ FocusScope {
                 anchors.fill: parent; anchors.margins: vpx(10)
                 source: cell.coverUrl; fillMode: Image.PreserveAspectCrop; asynchronous: true; mipmap: true
                 Rectangle { anchors.fill: parent; color: root.showingCollectionList ? cell.consoleColor : "#1a1a1a"; visible: cover.status !== Image.Ready; Behavior on color { ColorAnimation { duration: 200 } } }
+
+                Text {
+                    anchors.centerIn: parent
+                    width: parent.width - vpx(12)
+                    visible: !root.showingCollectionList && cover.status !== Image.Ready
+                    text: cell.coverLabel
+                    color: "#ffffff"
+                    font.family: global.fonts.sans
+                    font.pixelSize: vpx(11)
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                    style: Text.Outline
+                    styleColor: "#000000"
+                    z: 1
+                }
             }
             Image {
                 id: systemLogo
@@ -294,7 +310,7 @@ FocusScope {
                     root.inCollectionGames     = true
                     grid.currentIndex          = 0
             } else {
-                entry.launch()
+                root.openHub(entry)
             }
     }
 }

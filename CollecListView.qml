@@ -7,8 +7,10 @@ FocusScope {
     property var currentGames: api.allGames
     property bool currentIsCollections: false
     property string currentShortName: ""
+    property bool isSearching: false
 
     signal focusUpRequested()
+    signal cancelRequested()
 
     CollecListModel { id: collecModel }
 
@@ -94,7 +96,7 @@ FocusScope {
             }
         }
 
-        Keys.onLeftPressed: if (currentIndex > 0) currentIndex--
+        Keys.onLeftPressed:  if (currentIndex > 0) currentIndex--
         Keys.onRightPressed: if (currentIndex < model.count - 1) currentIndex++
 
         Keys.onUpPressed: {
@@ -103,6 +105,14 @@ FocusScope {
         }
 
         onCurrentIndexChanged: root.updateCurrent(currentIndex)
+    }
+
+    Keys.onPressed: {
+        if (!event.isAutoRepeat && api.keys.isCancel(event)) {
+            //console.log("[CollecListView] cancelRequested emitido, isSearching=", root.isSearching);
+            event.accepted = true;
+            root.cancelRequested();
+        }
     }
 
     Component.onCompleted: {

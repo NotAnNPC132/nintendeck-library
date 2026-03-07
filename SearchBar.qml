@@ -6,17 +6,21 @@ Item {
     id: root
 
     property real gameGridContentY: 0
+
     readonly property string searchQuery: committedQuery
     readonly property bool isSearching: committedQuery.length > 0
 
     signal focusDownRequested()
     signal backToGridRequested()
 
+    property bool semiTransparent: false
+    property bool solidInHub: false
+
     property string committedQuery: ""
+
     readonly property bool isActive: inputField.activeFocus || inputField.text.length > 0
     readonly property bool hasFocus:  inputField.activeFocus
     readonly property bool hasText:   inputField.text.length > 0
-
     readonly property color _bgDark: "#05070a"
     readonly property color _bgLight: "#ffffff"
     readonly property color _iconIdle: "#ffffff"
@@ -60,7 +64,9 @@ Item {
             ? 1.0
             : (searchZoneHover.containsMouse
             ? 1.0
-            : (root.gameGridContentY > vpx(10) ? 0.97 : 0.0))
+            : (root.solidInHub   ? 1.0
+            : (root.semiTransparent ? 0.75
+            : (root.gameGridContentY > vpx(10) ? 0.97 : 0.0))))
 
             Behavior on color { ColorAnimation  { duration: 300; easing.type: Easing.InOutQuad } }
             Behavior on opacity { NumberAnimation  { duration: 450; easing.type: Easing.InOutQuad } }
@@ -253,7 +259,9 @@ Item {
             anchors.fill: parent
             z: -1
             color: "#05070a"
-            opacity: root.gameGridContentY > vpx(10) ? 0.97 : 0.0
+            opacity: root.solidInHub    ? 1.0
+                   : root.semiTransparent ? 0.75
+                   : (root.gameGridContentY > vpx(10) ? 0.97 : 0.0)
             Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.InOutQuad } }
         }
 
@@ -286,6 +294,8 @@ Item {
             font.family: global.fonts.sans
             font.bold: true
             text: "--:--"
+            opacity: root.semiTransparent ? 1.0 : 1.0
+            Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.InOutQuad } }
         }
     }
 
@@ -301,6 +311,11 @@ Item {
 
     function activate() { inputField.forceActiveFocus(); }
     function clearSearch() { inputField.text = ""; }
+    function clearSearchImmediate() {
+        debounceTimer.stop();
+        inputField.text = "";
+        committedQuery  = "";
+    }
 
     function backspaceOne() {
         if (inputField.text.length > 0)

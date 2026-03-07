@@ -19,7 +19,7 @@
 - Icons used in this project by various contributors at [libretro](https://github.com/libretro/retroarch-assets/tree/master/xmb/monochrome/png) under the [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/deed.en) license.
 
 
-# Licencia
+# Licence
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Licencia Creative Commons" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br /><a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"></a>
 ---
 
