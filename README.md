@@ -6,14 +6,6 @@
 
 ![screen0](https://github.com/ZagonAb/wtf-library/blob/1a1a4ef91c7f7cfbe180eb643daaf1ea8140e642/.meta/screenshots/0.png)
 
-![screen1](https://github.com/ZagonAb/wtf-library/blob/1a1a4ef91c7f7cfbe180eb643daaf1ea8140e642/.meta/screenshots/1.png)
-
-![screen2](https://github.com/ZagonAb/wtf-library/blob/1a1a4ef91c7f7cfbe180eb643daaf1ea8140e642/.meta/screenshots/2.png)
-
-![screen3](https://github.com/ZagonAb/wtf-library/blob/1a1a4ef91c7f7cfbe180eb643daaf1ea8140e642/.meta/screenshots/3.png)
-
-![screen4](https://github.com/ZagonAb/wtf-library/blob/1a1a4ef91c7f7cfbe180eb643daaf1ea8140e642/.meta/screenshots/4.png)
-
 ![screen5](https://github.com/ZagonAb/wtf-library/blob/54c9c17e78e4483d30415676e1da34283884adff/.meta/screenshots/5.png)
 
 # RetroArch Monochrome Icons
