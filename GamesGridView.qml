@@ -32,15 +32,15 @@ FocusScope {
         }
 
         sorters: [
-            RoleSorter { roleName: "sortBy";     sortOrder: Qt.AscendingOrder;  enabled: !root.preserveSourceOrder && root.currentSortId === "alpha_asc"      },
-            RoleSorter { roleName: "sortBy";     sortOrder: Qt.DescendingOrder; enabled: !root.preserveSourceOrder && root.currentSortId === "alpha_desc"     },
-            RoleSorter { roleName: "rating";     sortOrder: Qt.DescendingOrder; enabled: !root.preserveSourceOrder && root.currentSortId === "rating_desc"    },
-            RoleSorter { roleName: "rating";     sortOrder: Qt.AscendingOrder;  enabled: !root.preserveSourceOrder && root.currentSortId === "rating_asc"     },
-            RoleSorter { roleName: "playTime";   sortOrder: Qt.DescendingOrder; enabled: !root.preserveSourceOrder && root.currentSortId === "playtime_desc"  },
-            RoleSorter { roleName: "playTime";   sortOrder: Qt.AscendingOrder;  enabled: !root.preserveSourceOrder && root.currentSortId === "playtime_asc"   },
+            RoleSorter { roleName: "sortBy"; sortOrder: Qt.AscendingOrder;  enabled: !root.preserveSourceOrder && root.currentSortId === "alpha_asc"      },
+            RoleSorter { roleName: "sortBy"; sortOrder: Qt.DescendingOrder; enabled: !root.preserveSourceOrder && root.currentSortId === "alpha_desc"     },
+            RoleSorter { roleName: "rating"; sortOrder: Qt.DescendingOrder; enabled: !root.preserveSourceOrder && root.currentSortId === "rating_desc"    },
+            RoleSorter { roleName: "rating"; sortOrder: Qt.AscendingOrder;  enabled: !root.preserveSourceOrder && root.currentSortId === "rating_asc"     },
+            RoleSorter { roleName: "playTime"; sortOrder: Qt.DescendingOrder; enabled: !root.preserveSourceOrder && root.currentSortId === "playtime_desc"  },
+            RoleSorter { roleName: "playTime"; sortOrder: Qt.AscendingOrder;  enabled: !root.preserveSourceOrder && root.currentSortId === "playtime_asc"   },
             RoleSorter { roleName: "releaseYear";sortOrder: Qt.DescendingOrder; enabled: !root.preserveSourceOrder && root.currentSortId === "release_desc"   },
             RoleSorter { roleName: "releaseYear";sortOrder: Qt.AscendingOrder;  enabled: !root.preserveSourceOrder && root.currentSortId === "release_asc"    },
-            RoleSorter { roleName: "players";    sortOrder: Qt.DescendingOrder; enabled: !root.preserveSourceOrder && root.currentSortId === "players_desc"   }
+            RoleSorter { roleName: "players"; sortOrder: Qt.DescendingOrder; enabled: !root.preserveSourceOrder && root.currentSortId === "players_desc"   }
         ]
     }
 
@@ -51,7 +51,7 @@ FocusScope {
     }
 
     onIsCollectionsChanged: { inCollectionGames = false; activeCollectionGames = null; grid.currentIndex = 0 }
-    onGamesModelChanged:    { inCollectionGames = false; grid.currentIndex = 0 }
+    onGamesModelChanged: { inCollectionGames = false; grid.currentIndex = 0 }
 
     function toggleFavorite() {
         if (currentEntry && showingGames) currentEntry.favorite = !currentEntry.favorite
@@ -60,7 +60,7 @@ FocusScope {
         if (grid.currentItem) activateEntry(grid.currentItem.entry)
     }
 
-    readonly property int  columns:    6
+    readonly property int  columns: 6
     readonly property real cellWidth:  Math.floor(width / columns)
 
     readonly property bool showingCollectionList: isCollections && !inCollectionGames
@@ -83,19 +83,19 @@ FocusScope {
         focus: true
         clip:  false
 
-        model:      root.effectiveModel
-        cellWidth:  root.cellWidth
+        model: root.effectiveModel
+        cellWidth: root.cellWidth
         cellHeight: root.cellHeight
 
-        flickDeceleration:    1500
+        flickDeceleration: 1500
         maximumFlickVelocity: 2500
 
         delegate: Item {
             id: cell
-            width:  root.cellWidth
+            width: root.cellWidth
             height: root.cellHeight
 
-            property var  entry:     modelData
+            property var  entry: modelData
             property bool isCurrent: GridView.isCurrentItem
 
             readonly property bool isGame: !root.showingCollectionList
@@ -208,9 +208,9 @@ FocusScope {
                 readonly property bool sortActive: cell.sortBadgeText !== ""
 
                 anchors {
-                    right:        cover.right
-                    rightMargin:  vpx(2)
-                    bottom:       sortActive ? sortBadge.top : cover.bottom
+                    right: cover.right
+                    rightMargin: vpx(2)
+                    bottom: sortActive ? sortBadge.top : cover.bottom
                     bottomMargin: sortActive ? vpx(4) : vpx(2)
                 }
 
@@ -268,7 +268,10 @@ FocusScope {
             Behavior on scale { NumberAnimation { duration: 120 } }
             MouseArea {
                 anchors.fill: parent
-                onClicked:       grid.currentIndex = index
+                onClicked: {
+                    grid.currentIndex = index
+                    grid.forceActiveFocus()
+                }
                 onDoubleClicked: root.activateEntry(cell.entry)
             }
         }

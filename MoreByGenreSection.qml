@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtGraphicalEffects 1.15
+import "Utils.js" as Utils
 
 Item {
     id: root
@@ -14,40 +15,49 @@ Item {
     signal tabFocusRequested()
     signal gameSelected(var game)
 
-    readonly property string _genre: {
-        if (!game) return "";
-        if (game.genreList && game.genreList.length > 0)
-            return game.genreList[0];
-        if (game.genre && game.genre !== "")
-            return game.genre.split(",")[0].trim();
-        return "";
-    }
+    readonly property string _genre: game ? Utils.getFirstGenre(game) : ""
 
     readonly property var _games: {
         if (_genre === "") return [];
-        var result = [];
-        for (var i = 0; i < api.allGames.count && result.length < 8; i++) {
+
+        var unplayed = [];
+        var played   = [];
+        var key      = _genre.toLowerCase();
+
+        for (var i = 0; i < api.allGames.count; i++) {
             var g = api.allGames.get(i);
             if (!g || g.title === game.title) continue;
+
+            var genres = Utils.cleanAndSplitGenres(
+                (g.genreList && g.genreList.length > 0)
+                    ? g.genreList.join(",")
+                    : (g.genre || "")
+            );
+
             var match = false;
-            if (g.genreList && g.genreList.length > 0) {
-                for (var j = 0; j < g.genreList.length; j++) {
-                    if (g.genreList[j].toLowerCase() === _genre.toLowerCase()) { match = true; break; }
-                }
-            } else if (g.genre && g.genre !== "") {
-                var parts = g.genre.split(",");
-                for (var k = 0; k < parts.length; k++) {
-                    if (parts[k].trim().toLowerCase() === _genre.toLowerCase()) { match = true; break; }
-                }
+            for (var j = 0; j < genres.length; j++) {
+                if (genres[j].toLowerCase() === key) { match = true; break; }
             }
-            if (match) result.push(g);
+            if (!match) continue;
+
+            if (g.playCount === 0) unplayed.push(g);
+            else                   played.push(g);
         }
-        return result;
+
+        function sortGroup(arr) {
+            return arr.slice().sort(function(a, b) {
+                var diff = b.rating - a.rating;
+                return diff !== 0 ? diff : (Math.random() - 0.5);
+            });
+        }
+
+        return sortGroup(unplayed).concat(sortGroup(played)).slice(0, 8);
     }
 
     readonly property bool hasGames: _games.length > 0
-    implicitHeight: hasGames ? _title.height + vpx(14) + _grid.height : 0
-    visible: hasGames
+    implicitHeight: hasGames ? _title.height + vpx(14) + _grid.height
+                             : _title.height + vpx(14) + vpx(60)
+    visible: true
 
     Text {
         id: _title
@@ -58,8 +68,17 @@ Item {
         color: "#607d8b"
     }
 
+    Text {
+        anchors { top: _title.bottom; left: parent.left; topMargin: vpx(14) }
+        visible: !root.hasGames
+        text: "No other games found for this genre."
+        font.pixelSize: vpx(13); font.family: global.fonts.sans
+        color: "#ffffff"
+    }
+
     GridView {
         id: _grid
+        visible: root.hasGames
         anchors { top: _title.bottom; left: parent.left; right: parent.right; topMargin: vpx(14) }
 
         readonly property real cardW: Math.floor((width - vpx(30) * 3) / 4)
@@ -68,7 +87,7 @@ Item {
 
         cellWidth:  cardW + vpx(20)
         cellHeight: cardH + vpx(10)
-        height:     Math.ceil(root._games.length / 4) * cellHeight - vpx(10)
+        height: Math.ceil(root._games.length / 4) * cellHeight - vpx(10)
 
         model: root._games.length
         interactive: false
@@ -109,7 +128,7 @@ Item {
         delegate: Item {
             id: _card
             readonly property bool isCurrent: GridView.isCurrentItem && _grid.activeFocus
-            readonly property var  _game:     root._games[index] || null
+            readonly property var _game: root._games[index] || null
 
             width:  _grid.cardW
             height: _grid.cardH
@@ -259,9 +278,9 @@ Item {
 
             onIsCurrentChanged: { if (isCurrent) _borderPulse.restart(); }
 
-            scale:   isCurrent ? 1.05 : 1.0
+            scale: isCurrent ? 1.05 : 1.0
             opacity: isCurrent ? 1.0  : (_grid.activeFocus ? 0.65 : 0.80)
-            Behavior on scale   { NumberAnimation { duration: 120 } }
+            Behavior on scale { NumberAnimation { duration: 120 } }
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
             MouseArea {

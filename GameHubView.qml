@@ -11,6 +11,24 @@ FocusScope {
     signal playRequested()
     signal focusSearchRequested()
 
+    function smartBack() {
+        if (_mediaViewLoader.active) {
+            _mediaViewLoader.active = false
+            var secMV = root._activeSlot === 0 ? _loaderA.item : _loaderB.item
+            if (secMV && secMV.hasGrid) secMV.gridFocusAtZero()
+            return
+        }
+        if (_tabList.activeFocus) {
+            _flick.contentY = 0;
+            _playBtn.forceActiveFocus();
+        } else if (root.gridHasFocus) {
+            _flick.contentY = _heroZone.height + _actionBar.height - root.searchBarHeight;
+            _tabList.forceActiveFocus();
+        } else {
+            root._navigateBack();
+        }
+    }
+
     property real searchBarHeight: 0
     readonly property bool playHasFocus: _playBtn.activeFocus
     readonly property bool tabHasFocus:  _tabList.activeFocus
@@ -19,6 +37,9 @@ FocusScope {
         var sec = _activeSlot === 0 ? _loaderA.item : _loaderB.item;
         return sec ? sec.gridActiveFocus : false;
     }
+
+    readonly property bool raGridHasFocus: gridHasFocus && (_activeTab === _raTabIndex)
+    readonly property bool mediaViewOpen:  _mediaViewLoader.active
 
     readonly property var currentGridGame: {
         if (_activeTab === 0) return null;
@@ -36,12 +57,12 @@ FocusScope {
         return game.assets.logo || "";
     }
 
-    readonly property string _lastPlayed:    game ? Utils.formatDate(game.lastPlayed)   : ""
-    readonly property bool   _hasLastPlayed: _lastPlayed !== ""
-    readonly property string _playTime:      game ? Utils.formatPlayTime(game.playTime) : ""
-    readonly property bool   _hasPlayTime:   game && game.playTime > 0
-    readonly property bool   _hasRating:     game && game.rating > 0
-    readonly property int    _ratingInt:     game ? Math.round(game.rating * 100) : 0
+    readonly property string _lastPlayed: game ? Utils.formatDate(game.lastPlayed)   : ""
+    readonly property bool _hasLastPlayed: _lastPlayed !== ""
+    readonly property string _playTime: game ? Utils.formatPlayTime(game.playTime) : ""
+    readonly property bool _hasPlayTime: game && game.playTime > 0
+    readonly property bool _hasRating: game && game.rating > 0
+    readonly property int _ratingInt: game ? Math.round(game.rating * 100) : 0
 
     readonly property string _publisherName: {
         if (!game) return "";
@@ -50,19 +71,19 @@ FocusScope {
         return "";
     }
 
-    readonly property string _genreName: {
-        if (!game) return "";
-        if (game.genreList && game.genreList.length > 0) return game.genreList[0];
-        if (game.genre && game.genre !== "") return game.genre.split(",")[0].trim();
-        return "";
-    }
+    readonly property string _genreName: game ? Utils.getFirstGenre(game) : ""
 
     readonly property var _tabs: {
         var t = ["GAME INFO"];
+        t.push("MEDIA");
         if (_publisherName !== "") t.push("MORE BY " + _publisherName.toUpperCase());
         if (_genreName     !== "") t.push("MORE " + _genreName.toUpperCase());
+        t.push("YOUR STUFF");
         return t;
     }
+
+    readonly property int _raTabIndex:    _tabs.length - 1
+    readonly property int _mediaTabIndex: 1
 
     property int _activeTab: 0
 
@@ -72,7 +93,7 @@ FocusScope {
         id: _flick
         anchors.fill: parent
         clip: true
-        interactive: false
+        interactive: true
         flickableDirection: Flickable.VerticalFlick
         contentHeight: _mainCol.implicitHeight + vpx(40)
 
@@ -113,12 +134,12 @@ FocusScope {
 
                 Item {
                     anchors {
-                        left:         parent.left
-                        bottom:       parent.bottom
-                        leftMargin:   vpx(48)
+                        left: parent.left
+                        bottom: parent.bottom
+                        leftMargin: vpx(48)
                         bottomMargin: vpx(18)
                     }
-                    width:  vpx(320)
+                    width: vpx(320)
                     height: vpx(100)
 
                     Image {
@@ -127,7 +148,7 @@ FocusScope {
                         source: root._logoSrc
                         fillMode: Image.PreserveAspectFit
                         horizontalAlignment: Image.AlignLeft
-                        verticalAlignment:   Image.AlignBottom
+                        verticalAlignment: Image.AlignBottom
                         asynchronous: true
                         smooth: true
                         mipmap: true
@@ -167,17 +188,16 @@ FocusScope {
                         width:  parent.width
                         height: vpx(72)
 
-
                         Item {
                             id: _playBtn
                             anchors {
-                                left:           parent.left
-                                leftMargin:     vpx(48)
+                                left: parent.left
+                                leftMargin: vpx(48)
                                 verticalCenter: parent.verticalCenter
                             }
-                            width:  vpx(200)
+                            width: vpx(200)
                             height: vpx(44)
-                            focus:  true
+                            focus: true
 
                             readonly property bool _focused: activeFocus
 
@@ -190,14 +210,14 @@ FocusScope {
 
                             Row {
                                 anchors {
-                                    left:           parent.left
-                                    leftMargin:     vpx(16)
+                                    left: parent.left
+                                    leftMargin: vpx(16)
                                     verticalCenter: parent.verticalCenter
                                 }
                                 spacing: vpx(10)
 
                                 Item {
-                                    width:  vpx(22)
+                                    width: vpx(22)
                                     height: vpx(22)
                                     anchors.verticalCenter: parent.verticalCenter
 
@@ -271,8 +291,8 @@ FocusScope {
                         Column {
                             id: _lastPlayedCol
                             anchors {
-                                left:           _playBtn.right
-                                leftMargin:     vpx(28)
+                                left: _playBtn.right
+                                leftMargin: vpx(28)
                                 verticalCenter: parent.verticalCenter
                             }
                             spacing: vpx(3)
@@ -298,8 +318,8 @@ FocusScope {
                         Column {
                             id: _playTimeCol
                             anchors {
-                                left:           root._hasLastPlayed ? _lastPlayedCol.right : _playBtn.right
-                                leftMargin:     vpx(28)
+                                left: root._hasLastPlayed ? _lastPlayedCol.right : _playBtn.right
+                                leftMargin: vpx(28)
                                 verticalCenter: parent.verticalCenter
                             }
                             spacing: vpx(3)
@@ -329,7 +349,7 @@ FocusScope {
                                     if (root._hasLastPlayed) return _lastPlayedCol.right;
                                     return _playBtn.right;
                                 }
-                                leftMargin:     vpx(28)
+                                leftMargin: vpx(28)
                                 verticalCenter: parent.verticalCenter
                             }
                             spacing: vpx(4)
@@ -386,23 +406,23 @@ FocusScope {
                     Rectangle {
                         id: _sepTop
                         width:  parent.width - vpx(96)
-                        x:      vpx(48)
+                        x: vpx(48)
                         height: vpx(1)
-                        color:  "#253040"
+                        color: "#253040"
                     }
 
                     Item {
                         id: _tabBarItem
-                        width:  parent.width
+                        width: parent.width
                         height: vpx(52)
 
                         ListView {
                             id: _tabList
                             anchors {
                                 horizontalCenter: parent.horizontalCenter
-                                verticalCenter:   parent.verticalCenter
+                                verticalCenter: parent.verticalCenter
                             }
-                            width:  contentWidth
+                            width: contentWidth
                             height: vpx(36)
                             orientation: ListView.Horizontal
                             interactive: false
@@ -462,9 +482,12 @@ FocusScope {
                                 width: Math.min(_tabTxt.implicitWidth, vpx(160)) + vpx(28)
                                 height: _tabList.height
 
-                                readonly property bool _active:   root._activeTab === index
-                                readonly property bool _focused:  _tabList.activeFocus && _active
+                                readonly property bool _active: root._activeTab === index
+                                readonly property bool _focused: _tabList.activeFocus && _active
                                 readonly property bool _playMode: root.playHasFocus
+
+                                readonly property bool _isRA: index === root._raTabIndex
+
                                 Rectangle {
                                     anchors.fill: parent
                                     radius: vpx(18)
@@ -476,11 +499,15 @@ FocusScope {
                                     }
                                     Behavior on color { ColorAnimation { duration: 180 } }
                                 }
+
                                 Text {
                                     id: _tabTxt
                                     anchors.centerIn: parent
                                     text: modelData
-                                    color: _focused ? "#0b1117" : "#ffffff"
+                                    color: {
+                                        if (_focused)  return _isRA ? "#0b1117" : "#0b1117";
+                                        return "#ffffff";
+                                    }
                                     font.family: global.fonts.sans
                                     font.pixelSize: vpx(13)
                                     font.bold: _active || _focused
@@ -495,8 +522,10 @@ FocusScope {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
+
                                     onClicked: {
                                         root._activeTab = index;
+                                        _flick.contentY = _heroZone.height + _actionBar.height - root.searchBarHeight;
                                         _tabList.forceActiveFocus();
                                     }
                                 }
@@ -506,16 +535,22 @@ FocusScope {
 
                     Rectangle {
                         id: _sepBottom
-                        width:  parent.width - vpx(96)
-                        x:      vpx(48)
+                        width: parent.width - vpx(96)
+                        x: vpx(48)
                         height: vpx(1)
-                        color:  "#1e2d38"
+                        color: "#1e2d38"
                     }
 
                     Item {
                         id: _sectionItem
                         width: parent.width
-                        height: vpx(420)
+                        height: {
+                            var sec = _activeSlot === 0 ? _loaderA.item : _loaderB.item;
+                            if (sec && (root._activeTab === root._raTabIndex
+                                     || root._activeTab === root._mediaTabIndex))
+                                return Math.max(vpx(420), sec.implicitHeight + vpx(48));
+                            return vpx(420);
+                        }
 
                         Loader {
                             id: _loaderA
@@ -549,6 +584,8 @@ FocusScope {
         }
     }
 
+
+
     Component {
         id: _gameInfoComp
         GameInfoSection {
@@ -573,10 +610,26 @@ FocusScope {
         }
     }
 
+    Component {
+        id: _raInfoComp
+        RAGameInfoSection {
+            width: parent ? parent.width : 0
+            game: root.game
+        }
+    }
+
+    Component {
+        id: _mediaComp
+        GameMediaSection {
+            width: parent ? parent.width : 0
+            game: root.game
+        }
+    }
+
     property int  _activeSlot: 0
     property int  _slot0Tab:   0
     property int  _slot1Tab:  -1
-    property var  _gameStack:    []
+    property var  _gameStack: []
     property bool _isNavigating: false
 
     function _navigateToGame(newGame) {
@@ -608,10 +661,13 @@ FocusScope {
     }
 
     function _compForTab(tab) {
+        if (tab === root._raTabIndex)    return _raInfoComp;
+        if (tab === root._mediaTabIndex) return _mediaComp;
+
         switch (tab) {
             case 0: return _gameInfoComp;
-            case 1: return _publisherName !== "" ? _publisherComp : _genreComp;
-            case 2: return _genreComp;
+            case 2: return _publisherName !== "" ? _publisherComp : _genreComp;
+            case 3: return _genreName !== "" ? _genreComp : null;
             default: return null;
         }
     }
@@ -633,15 +689,23 @@ FocusScope {
                 root._navigateToGame(newGame);
             });
         }
+        if (item && typeof item.mediaViewRequested !== "undefined") {
+            item.mediaViewRequested.connect(function(mediaList, startIndex) {
+                _mediaViewLoader.mediaList  = mediaList;
+                _mediaViewLoader.startIndex = startIndex;
+                _mediaViewLoader.active     = true;
+                _focusMediaViewTimer.start();
+            });
+        }
     }
 
     on_ActiveTabChanged: {
         var savedY = _flick.contentY;
         if (_activeSlot === 0) {
-            _slot1Tab   = _activeTab;
+            _slot1Tab = _activeTab;
             _activeSlot = 1;
         } else {
-            _slot0Tab   = _activeTab;
+            _slot0Tab = _activeTab;
             _activeSlot = 0;
         }
         _suppressFlickAnim = true;
@@ -662,9 +726,46 @@ FocusScope {
         }
     }
 
+    Loader {
+        id: _mediaViewLoader
+        anchors {
+            top:    parent.top
+            bottom: parent.bottom
+            left:   parent.left
+            right:  parent.right
+            topMargin: -root.searchBarHeight
+        }
+        z: 900
+        active: false
+        visible: active
+
+        property var mediaList:  []
+        property int startIndex: 0
+
+        sourceComponent: Component {
+            GameMediaView {
+                mediaList:  _mediaViewLoader.mediaList
+                startIndex: _mediaViewLoader.startIndex
+                onCloseRequested: {
+                    _mediaViewLoader.active = false
+                    var sec = root._activeSlot === 0 ? _loaderA.item : _loaderB.item
+                    if (sec && sec.hasGrid) sec.gridFocusAtZero()
+                }
+            }
+        }
+    }
+
+    Timer {
+        id: _focusMediaViewTimer
+        interval: 0
+        repeat: false
+        onTriggered: { if (_mediaViewLoader.item) _mediaViewLoader.item.forceActiveFocus() }
+    }
+
     onGameChanged: {
         _activeTab = 0; _slot0Tab = 0; _slot1Tab = -1; _activeSlot = 0;
         if (!_isNavigating) _gameStack = [];
+        _mediaViewLoader.active = false;
     }
     onFocusChanged: { if (focus) _playBtn.forceActiveFocus(); }
 

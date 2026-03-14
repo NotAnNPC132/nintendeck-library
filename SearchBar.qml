@@ -15,12 +15,21 @@ Item {
 
     property bool semiTransparent: false
     property bool solidInHub: false
+    property bool hidden: false
+
+    opacity: hidden ? 0.0 : 1.0
+    visible: opacity > 0.0
+    Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.InOutQuad } }
 
     property string committedQuery: ""
 
-    readonly property bool isActive: inputField.activeFocus || inputField.text.length > 0
-    readonly property bool hasFocus:  inputField.activeFocus
-    readonly property bool hasText:   inputField.text.length > 0
+    readonly property bool isActive:        inputField.activeFocus || inputField.text.length > 0
+    readonly property bool hasFocus:        inputField.activeFocus
+    readonly property bool hasText:         inputField.text.length > 0
+    readonly property bool credentialsOpen:          credentialsPopup.isOpen
+    readonly property bool credentialsHasText:       credentialsPopup.isOpen && credentialsPopup.credentialsHasText
+    readonly property bool credentialsButtonFocused: credentialsPopup.isOpen && credentialsPopup.buttonFocused
+    readonly property bool raFocused:       raBtn.activeFocus
     readonly property color _bgDark: "#05070a"
     readonly property color _bgLight: "#ffffff"
     readonly property color _iconIdle: "#ffffff"
@@ -31,6 +40,23 @@ Item {
     readonly property color _currentIconColor: isActive ? "#000000" : _iconIdle
     readonly property color _currentTextColor: isActive ? "#000000" : _textColor
     readonly property color _currentPlaceholder: isActive ? "#000000" : _placeholder
+    property bool batteryCharging: api.device.batteryCharging
+    property real batteryPercent:  api.device.batteryPercent
+    property int  batteryLevel:    isNaN(batteryPercent) ? -1 : Math.round(batteryPercent * 100)
+    property bool hasBattery:      !isNaN(api.device.batteryPercent)
+
+    Timer {
+        id: batteryTimer
+        interval: 30000
+        running:  true
+        repeat:   true
+        onTriggered: {
+            root.batteryCharging = api.device.batteryCharging
+            root.batteryPercent  = api.device.batteryPercent
+            root.batteryLevel    = isNaN(root.batteryPercent) ? -1 : Math.round(root.batteryPercent * 100)
+            root.hasBattery      = !isNaN(api.device.batteryPercent)
+        }
+    }
 
     Timer {
         id: debounceTimer
@@ -68,7 +94,7 @@ Item {
             : (root.semiTransparent ? 0.75
             : (root.gameGridContentY > vpx(10) ? 0.97 : 0.0))))
 
-            Behavior on color { ColorAnimation  { duration: 300; easing.type: Easing.InOutQuad } }
+            Behavior on color   { ColorAnimation  { duration: 300; easing.type: Easing.InOutQuad } }
             Behavior on opacity { NumberAnimation  { duration: 450; easing.type: Easing.InOutQuad } }
         }
 
@@ -178,6 +204,16 @@ Item {
             Keys.onUpPressed: { event.accepted = true; }
 
             Keys.onPressed: {
+                if (event.key === Qt.Key_Right) {
+                    if (inputField.text.length === 0 ||
+                        inputField.cursorPosition === inputField.text.length) {
+                        event.accepted = true
+                        raBtn.forceActiveFocus()
+                    }
+
+                    return
+                }
+
                 if (api.keys.isCancel(event)) {
                     event.accepted = true;
                     if (inputField.text.length > 0) {
@@ -240,7 +276,6 @@ Item {
                 }
             }
         }
-
     }
 
     Rectangle {
@@ -282,20 +317,165 @@ Item {
             }
         }
 
-        Text {
-            id: clockLabel
+        Row {
+            id: clockRow
             anchors {
-                right: clockZone.right
+                right: parent.right
                 rightMargin: vpx(10)
                 verticalCenter: parent.verticalCenter
             }
-            color: root._clockColor
-            font.pixelSize: vpx(17)
-            font.family: global.fonts.sans
-            font.bold: true
-            text: "--:--"
-            opacity: root.semiTransparent ? 1.0 : 1.0
-            Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.InOutQuad } }
+            spacing: vpx(12)
+            layoutDirection: Qt.RightToLeft
+
+            Text {
+                id: clockLabel
+                anchors.verticalCenter: parent.verticalCenter
+                color: root._clockColor
+                font.pixelSize: vpx(17)
+                font.family: global.fonts.sans
+                font.bold: true
+                text: "--:--"
+                opacity: root.semiTransparent ? 1.0 : 1.0
+                Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.InOutQuad } }
+            }
+
+            Row {
+                id: batteryIndicator
+                spacing: vpx(2)
+                anchors.verticalCenter: parent.verticalCenter
+                visible: true
+
+                Item {
+                    id: batteryIconContainer
+                    width:  vpx(26)
+                    height: vpx(17)
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image {
+                        id: batteryIcon
+                        anchors.fill: parent
+                        source: {
+                            if (!root.hasBattery) return "assets/icons/no_battery.svg"
+                            if (root.batteryCharging) return "assets/icons/battery_charging.svg"
+                            if (root.batteryLevel <= 9) return "assets/icons/battery_0.svg"
+                            if (root.batteryLevel <= 34) return "assets/icons/battery_1.svg"
+                            if (root.batteryLevel <= 59) return "assets/icons/battery_2.svg"
+                            if (root.batteryLevel <= 84) return "assets/icons/battery_3.svg"
+                            return "assets/icons/battery_4.svg"
+                        }
+                        fillMode: Image.PreserveAspectFit
+                        mipmap:true
+                        visible: true
+                    }
+                }
+
+                Text {
+                    id: batteryText
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: {
+                        if (!root.hasBattery) return "AC"
+                        if (root.batteryCharging) return "⚡" + root.batteryLevel + "%"
+                        return root.batteryLevel + "%"
+                    }
+                    color: {
+                        if (!root.hasBattery) return Qt.rgba(1, 1, 1, 0.55)
+                        if (root.batteryCharging) return "#4CAF50"
+                        if (root.batteryLevel <= 15) return "#F44336"
+                        if (root.batteryLevel <= 30) return "#FF9800"
+                        return root._clockColor
+                    }
+                    Behavior on color { ColorAnimation { duration: 300; easing.type: Easing.InOutQuad } }
+                    font.pixelSize: vpx(14)
+                    font.family:    global.fonts.sans
+                }
+            }
+
+            Rectangle {
+                width:   vpx(1)
+                height:  vpx(18)
+                color: "#555555"
+                opacity: 0.7
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Item {
+                id: raBtn
+                width: vpx(26)
+                height: vpx(26)
+                anchors.verticalCenter: parent.verticalCenter
+
+                Rectangle {
+                    anchors {
+                        fill: parent
+                        margins: vpx(-5)
+                    }
+                    radius: vpx(5)
+                    color: raBtn.activeFocus ? "#f5a623" : "transparent"
+                    opacity: raBtn.activeFocus ? 0.18 : 0.0
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
+                }
+
+                Image {
+                    id: _raIcon
+                    anchors.fill: parent
+                    source: "assets/icons/retroachievements.svg"
+                    fillMode: Image.PreserveAspectFit
+                    mipmap: true
+                    visible: false
+                }
+
+                ColorOverlay {
+                    anchors.fill: _raIcon
+                    source: _raIcon
+                    color: raBtn.activeFocus ? "#f5a623" : "#ffffff"
+                    visible: _raIcon.status === Image.Ready
+                    Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.InOutQuad } }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: _raIcon.status !== Image.Ready
+                    text: "RA"
+                    font.pixelSize: vpx(11)
+                    font.bold: true
+                    font.family: global.fonts.sans
+                    color: raBtn.activeFocus ? "#f5a623" : "#ffffff"
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                }
+
+                Keys.onLeftPressed: {
+                    event.accepted = true
+                    inputField.forceActiveFocus()
+                    inputField.cursorPosition = inputField.text.length
+                }
+
+                Keys.onPressed: {
+                    if (api.keys.isCancel(event)) {
+                        event.accepted = true
+                        inputField.forceActiveFocus()
+                        inputField.cursorPosition = inputField.text.length
+                        return
+                    }
+
+                    if (!event.isAutoRepeat && api.keys.isAccept(event)) {
+                        event.accepted = true
+                        credentialsPopup.open()
+                        return
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape:  Qt.PointingHandCursor
+                    hoverEnabled: true
+                    onClicked: {
+                        if (credentialsPopup.isOpen)
+                            credentialsPopup.close()
+                        else
+                            credentialsPopup.open()
+                    }
+                }
+            }
         }
     }
 
@@ -307,6 +487,28 @@ Item {
         opacity: root.isActive ? 1.0 : (root.gameGridContentY > vpx(10) ? 0.97 : 0.0)
         Behavior on color   { ColorAnimation  { duration: 300 } }
         Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.InOutQuad } }
+    }
+
+    RACredentialsPopup {
+        id: credentialsPopup
+
+        anchors {
+            top: parent.bottom
+            horizontalCenter: parent.horizontalCenter
+        }
+
+        width:  parent.width
+        height: vpx(260)
+
+        onCredentialsSaved: raBtn.forceActiveFocus()
+        onPopupClosed: raBtn.forceActiveFocus()
+    }
+
+    Component.onCompleted: {
+        root.batteryCharging = api.device.batteryCharging
+        root.batteryPercent = api.device.batteryPercent
+        root.batteryLevel = isNaN(root.batteryPercent) ? -1 : Math.round(root.batteryPercent * 100)
+        root.hasBattery = !isNaN(api.device.batteryPercent)
     }
 
     function activate() { inputField.forceActiveFocus(); }

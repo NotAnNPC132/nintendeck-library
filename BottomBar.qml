@@ -21,31 +21,54 @@ Rectangle {
     signal filterClicked()
 
     property bool showFilter: false
+    property int  hubActiveTab: 0
+    property bool hubPlayFocus: false
+    property bool hubGridFocus: false
+    property bool hubRaGridFocus: false
+    property bool raGamesTab: false
+    property bool credsHasText: false
+    property bool hubMediaTab: false
+    property bool hubMediaView: false
 
-    // Hub sub-state: synced from GameHubView via theme.qml
-    property int  hubActiveTab:  0   // 0 = GAME INFO, 1 = publisher, 2 = genre
-    property bool hubPlayFocus: false // true when the PLAY button has focus
-    property bool hubGridFocus: false // true when a publisher/genre grid has focus
-
-    readonly property bool showFavorite: activeView === "grid"
-                                      || (activeView === "hub" && hubGridFocus)
-    readonly property bool showSelect: activeView === "grid"
+    readonly property bool showFavorite: (activeView === "grid"
+                                      || (activeView === "hub" && hubGridFocus && !hubRaGridFocus))
+                                      && activeView !== "ra"
+                                      && activeView !== "home_ra"
+                                      && activeView !== "search"
+                                      && activeView !== "search_ra"
+                                      && activeView !== "search_creds"
+                                      && !hubMediaTab
+                                      && !hubMediaView
+    readonly property bool showSelect: !hubMediaView
+                                    && (activeView === "grid"
                                     || activeView === "collections"
                                     || activeView === "home"
-                                    || (activeView === "hub" && (hubPlayFocus || hubActiveTab > 0))
+                                    || activeView === "home_ra"
+                                    || activeView === "search_ra"
+                                    || activeView === "search_creds_btn"
+                                    || (activeView === "hub" && (hubPlayFocus || (hubActiveTab > 0 && !hubRaGridFocus)))
+                                    || (activeView === "ra"  && raGamesTab))
+    readonly property bool showBack: activeView !== "search_creds"
+                                  || credsHasText
     readonly property bool isFav: currentGame ? (currentGame.favorite === true) : false
 
     readonly property string bLabel: {
         if (activeView === "search" && searchHasText) return "BACKSPACE";
-        if (activeView === "grid" && isRootGrid)      return "EXIT";
-        if (activeView === "home_viewmore")            return "EXIT";
-        if (activeView === "hub")                      return "BACK";
+        if (activeView === "search_ra" && searchHasText) return "BACKSPACE";
+        if (activeView === "search_creds" && credsHasText) return "BACKSPACE";
+        if (activeView === "search_creds_btn") return "BACK";
+        if (activeView === "grid" && isRootGrid) return "EXIT";
+        if (activeView === "home_viewmore") return "EXIT";
+        if (activeView === "hub") return "BACK";
+        if (activeView === "ra") return "BACK";
         return "BACK";
     }
 
     readonly property string aLabel: {
         if (activeView === "collections") return "OK";
-        if (activeView === "hub")         return hubPlayFocus ? "PLAY" : "SELECT";
+        if (activeView === "hub") return hubPlayFocus ? "PLAY" : "SELECT";
+        if (activeView === "search_creds_btn") return "SELECT";
+        if (activeView === "search_ra") return "RA SETUP";
         return "SELECT";
     }
 
@@ -220,6 +243,7 @@ Rectangle {
 
         Item {
             id: btnBack
+            visible: bottomBar.showBack
             height: vpx(36)
             width: backInner.implicitWidth + vpx(20)
 

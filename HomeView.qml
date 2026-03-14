@@ -9,11 +9,27 @@ FocusScope {
     signal goToLibrary()
     signal focusSearchRequested()
     signal openHub(var game)
+    signal openRA(var game, string raGameId)
 
     readonly property var currentGame: _strip.currentIndex < _recentCount
     ? _getGame(_strip.currentIndex) : null
     readonly property bool onViewMore: _strip.currentIndex >= _recentCount
     readonly property bool onViewMoreFocused: _strip.activeFocus && (_strip.currentIndex >= _recentCount)
+    readonly property bool raStripFocused: _raStrip.activeFocus
+
+    property real _savedScrollY: 0
+    property bool _returningFromRA: false
+
+    function saveScrollForRA() {
+        _savedScrollY = _scroller.contentY;
+    }
+
+    function restoreScrollFromRA() {
+        _returningFromRA = true;
+        _scroller.contentY = _savedScrollY;
+        _returningFromRA = false;
+        _raStrip.forceActiveFocus();
+    }
     readonly property string currentTitle: currentGame ? currentGame.title : ""
     readonly property string currentPlaytime: currentGame ? Utils.formatPlayTime(currentGame.playTime) : ""
     readonly property string currentLastPlayed: currentGame ? Utils.formatLastPlayed(currentGame.lastPlayed) : ""
@@ -73,6 +89,48 @@ FocusScope {
 
     property var _recGames: []
     property var _recReasons: []
+    readonly property string _raApiKey: api.memory.has("ra_api_key")  ? api.memory.get("ra_api_key")  : ""
+    readonly property string _raUser: api.memory.has("ra_api_user") ? api.memory.get("ra_api_user") : ""
+    property var  _raRecentGames: []
+    property bool _raLoading:     false
+
+    function _loadRARecent() {
+        _raLoading = true;
+        var xhr = new XMLHttpRequest();
+        var url = "https://retroachievements.org/API/API_GetUserRecentlyPlayedGames.php"
+                  + "?y=" + _raApiKey + "&u=" + _raUser + "&c=4";
+        xhr.open("GET", url, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE) return;
+            _raLoading = false;
+            if (xhr.status !== 200) return;
+            try {
+                var arr = JSON.parse(xhr.responseText);
+                if (!Array.isArray(arr)) return;
+                var result = [];
+                for (var i = 0; i < arr.length && i < 4; i++) {
+                    var g = arr[i];
+                    result.push({
+                        title:       g.Title          || "",
+                        consoleName: g.ConsoleName    || "",
+                        imgIcon:     g.ImageIcon
+                                     ? "https://media.retroachievements.org" + g.ImageIcon
+                                     : "",
+                        imgTitle:    g.ImageTitle
+                                     ? "https://media.retroachievements.org" + g.ImageTitle
+                                     : "",
+                        raGameId:    String(g.GameID              || ""),
+                        numAch:      parseInt(g.NumAchievements)        || 0,
+                        numEarned:   parseInt(g.NumAchievementsEarned)  || 0,
+                        pctWon:      parseFloat(g.PctWon)               || 0.0,
+                        lastPlayed:  g.LastPlayed || ""
+                    });
+                }
+                _raRecentGames = result;
+            } catch(e) { console.log("RA parse error:", e); }
+        };
+        xhr.send();
+    }
 
     function _buildRecommended() {
         var total = api.allGames.count;
@@ -231,7 +289,7 @@ FocusScope {
         _strip.forceActiveFocus();
     }
 
-    Component.onCompleted: { _rebuildCache(); _buildRecommended(); }
+    Component.onCompleted: { _rebuildCache(); _buildRecommended(); _loadRARecent(); }
     Connections {
         target: _recentSrc
         function onCountChanged() { root._rebuildCache(); root._buildRecommended(); }
@@ -244,6 +302,7 @@ FocusScope {
         onTriggered: {
             _rebuildCache();
             _buildRecommended();
+            _loadRARecent();
         }
     }
 
@@ -321,9 +380,16 @@ FocusScope {
             }
         }
         Connections {
+            target: _raStrip
+            function onActiveFocusChanged() {
+                if (_raStrip.activeFocus)
+                    _scroller.ensureVisible(_raStrip);
+            }
+        }
+        Connections {
             target: _strip
             function onActiveFocusChanged() {
-                if (_strip.activeFocus)
+                if (_strip.activeFocus && !root._returningFromRA)
                     _scroller.contentY = 0;
             }
         }
@@ -331,9 +397,13 @@ FocusScope {
         Item {
             id: _content
             width: _scroller.width
-            implicitHeight: _recStrip.visible
-            ? (_recStrip.y + _recStrip.height + vpx(20))
-            : (_info.y + _info.height + vpx(20))
+            implicitHeight: {
+                if (_raStrip.visible)
+                    return _raStrip.y + _raStrip.height + vpx(20);
+                if (_recStrip.visible)
+                    return _recStrip.y + _recStrip.height + vpx(20);
+                return _info.y + _info.height + vpx(20);
+            }
 
             Text {
                 id: _label
@@ -966,7 +1036,10 @@ FocusScope {
                 Keys.onLeftPressed: { if (currentIndex > 0) currentIndex--; event.accepted = true; }
                 Keys.onRightPressed: { if (currentIndex < count - 1) currentIndex++; event.accepted = true; }
                 Keys.onUpPressed: { event.accepted = true; _strip.forceActiveFocus(); }
-                Keys.onDownPressed: { event.accepted = true; }
+                Keys.onDownPressed: {
+                    event.accepted = true;
+                    if (root._raRecentGames.length > 0) _raStrip.forceActiveFocus();
+                }
 
                 Keys.onPressed: {
                     if (!event.isAutoRepeat && api.keys.isAccept(event)) {
@@ -979,6 +1052,235 @@ FocusScope {
                         event.accepted = true;
                         var gd = root._recGames[currentIndex];
                         if (gd) gd.favorite = !gd.favorite;
+                        return;
+                    }
+                    if (api.keys.isNextPage(event)) {
+                        event.accepted = true;
+                        if (currentIndex < count - 1) currentIndex++;
+                        return;
+                    }
+                    if (api.keys.isPrevPage(event)) {
+                        event.accepted = true;
+                        if (currentIndex > 0) currentIndex--;
+                        return;
+                    }
+                    if (!event.isAutoRepeat && api.keys.isCancel(event)) {
+                        event.accepted = true;
+                        _strip.currentIndex = 0;
+                        _strip.forceActiveFocus();
+                    }
+                }
+            }
+
+            Text {
+                id: _raLabel
+                anchors {
+                    top: _recStrip.visible ? _recStrip.bottom : _info.bottom
+                    left: parent.left
+                    topMargin: vpx(28)
+                }
+                visible: root._raRecentGames.length > 0 || root._raLoading
+                font.pixelSize: vpx(32)
+                font.bold: true
+                font.family: global.fonts.sans
+                color: "#ffffff"
+                opacity: 0.95
+
+                text: "RetroAchievements"
+
+                Rectangle {
+                    anchors { left: parent.right; leftMargin: vpx(12); verticalCenter: parent.verticalCenter }
+                    width: vpx(20); height: vpx(20); radius: vpx(10)
+                    color: "transparent"
+                    border.width: vpx(2); border.color: "#57cbde"
+                    visible: root._raLoading
+                    RotationAnimator on rotation {
+                        running: root._raLoading
+                        loops: Animation.Infinite; from: 0; to: 360; duration: 900
+                    }
+                }
+            }
+
+            ListView {
+                id: _raStrip
+                anchors {
+                    top: _raLabel.bottom
+                    left: parent.left
+                    right: parent.right
+                    topMargin: vpx(14)
+                }
+                height: vpx(220)
+                visible: root._raRecentGames.length > 0
+
+                orientation: ListView.Horizontal
+                spacing: vpx(16)
+                clip: false
+                focus: false
+                interactive: false
+                highlightMoveDuration: 0
+                highlightRangeMode: ListView.NoHighlightRange
+                currentIndex: 0
+
+                model: Math.min(root._raRecentGames.length, 4)
+
+                readonly property real cardW: (width - vpx(16) * 3) / 4
+                readonly property real imgH:  vpx(160)
+
+                delegate: Item {
+                    id: _raCell
+
+                    readonly property bool isCurrent: ListView.isCurrentItem
+                    readonly property var  _rg: root._raRecentGames[index] || {}
+
+                    width: _raStrip.cardW
+                    height: _raStrip.height
+                    scale: isCurrent && _raStrip.activeFocus ? 1.05 : 1.0
+                    opacity: isCurrent ? 1.0 : (_raStrip.activeFocus ? 1.0 : 0.98)
+                    Behavior on scale   { NumberAnimation { duration: 120 } }
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                    Item {
+                        id: _raImgArea
+                        anchors { top: parent.top; left: parent.left; right: parent.right }
+                        height: _raStrip.imgH
+                        clip: false
+
+                        Image {
+                            id: _raArt
+                            width: parent.width
+                            height:parent.height * 1.2
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true; smooth: true
+                            source: _raCell._rg.imgTitle || _raCell._rg.imgIcon || ""
+
+                            Rectangle {
+                                anchors.fill: parent; color: "#1c2533"
+                                visible: parent.status !== Image.Ready
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        id: _raInfoPanel
+                        anchors {
+                            top: _raImgArea.bottom
+                            left: parent.left; right: parent.right; bottom: parent.bottom
+                        }
+                        color: "#121926"
+
+                        Column {
+                            anchors {
+                                left: parent.left; right: parent.right
+                                verticalCenter: parent.verticalCenter
+                                leftMargin: vpx(8); rightMargin: vpx(8)
+                            }
+                            spacing: vpx(3)
+
+                            Text {
+                                width: parent.width
+                                text: _raCell._rg.title || ""
+                                font.pixelSize: vpx(12)
+                                font.bold: true
+                                font.family: global.fonts.sans
+                                color: "#ffffff"
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                width: parent.width
+                                text: _raCell._rg.consoleName || ""
+                                font.pixelSize: vpx(11)
+                                font.family: global.fonts.sans
+                                color: "#57cbde"
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                width: parent.width
+                                visible: (_raCell._rg.lastPlayed || "") !== ""
+                                text: "Last played " + (_raCell._rg.lastPlayed || "")
+                                font.pixelSize: vpx(10)
+                                font.family: global.fonts.sans
+                                color: "#667788"
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+
+                    Item {
+                        id: _raGlowSrc
+                        anchors.fill: parent
+                        visible: false
+                        Rectangle { anchors.fill: parent; color: "#1a1a1a" }
+                        Image {
+                            anchors { top: parent.top; left: parent.left; right: parent.right }
+                            height: _raStrip.imgH
+                            source: _raArt.source
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true; smooth: true
+                        }
+                    }
+
+                    FastBlur {
+                        anchors.fill: _raGlowSrc
+                        anchors.margins: vpx(-14)
+                        source: _raGlowSrc
+                        radius: 70
+                        transparentBorder: true
+                        opacity: _raCell.isCurrent && _raStrip.activeFocus ? 0.40 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 180 } }
+                    }
+
+                    Rectangle {
+                        id: _raSelRect
+                        anchors.fill: parent
+                        property real borderExtra: 0
+                        anchors.margins: vpx(-3.5) - borderExtra
+                        border.width: vpx(1.5) + borderExtra
+                        border.color: "#c7c7c7"
+                        color: "transparent"
+                        opacity: 0
+
+                        SequentialAnimation on opacity {
+                            running: _raCell.isCurrent && _raStrip.activeFocus
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.8; duration: 600; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 0.3; duration: 600; easing.type: Easing.InOutQuad }
+                            onStopped: _raSelRect.opacity = 0
+                        }
+                        SequentialAnimation on borderExtra {
+                            id: _raBorderPulse; running: false
+                            NumberAnimation { to: vpx(3.5); duration: 150; easing.type: Easing.OutQuad }
+                            NumberAnimation { to: 0;        duration: 250; easing.type: Easing.InQuad }
+                        }
+                    }
+
+                    onIsCurrentChanged: { if (isCurrent && _raStrip.activeFocus) _raBorderPulse.restart(); }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: { _raStrip.currentIndex = index; _raStrip.forceActiveFocus(); }
+                        onDoubleClicked: {
+                            var rg = root._raRecentGames[index];
+                            if (rg) { root.saveScrollForRA(); root.openRA(null, rg.raGameId); }
+                        }
+                    }
+                }
+
+                Keys.onLeftPressed:  { if (currentIndex > 0) currentIndex--; event.accepted = true; }
+                Keys.onRightPressed: { if (currentIndex < count - 1) currentIndex++; event.accepted = true; }
+                Keys.onUpPressed: {
+                    event.accepted = true;
+                    if (root._recGames.length > 0) _recStrip.forceActiveFocus();
+                    else _strip.forceActiveFocus();
+                }
+                Keys.onDownPressed: { event.accepted = true; }
+
+                Keys.onPressed: {
+                    if (!event.isAutoRepeat && api.keys.isAccept(event)) {
+                        event.accepted = true;
+                        var rg = root._raRecentGames[currentIndex];
+                        if (rg) { root.saveScrollForRA(); root.openRA(null, rg.raGameId); }
                         return;
                     }
                     if (api.keys.isNextPage(event)) {

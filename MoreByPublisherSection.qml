@@ -25,8 +25,11 @@ Item {
 
     readonly property var _games: {
         if (_publisher === "") return [];
-        var result = [];
-        for (var i = 0; i < api.allGames.count && result.length < 8; i++) {
+
+        var unplayed = [];
+        var played   = [];
+
+        for (var i = 0; i < api.allGames.count; i++) {
             var g = api.allGames.get(i);
             if (!g || g.title === game.title) continue;
             var pub = "";
@@ -34,15 +37,26 @@ Item {
                 pub = g.publisherList[0];
             else if (g.publisher && g.publisher !== "")
                 pub = g.publisher.split(",")[0].trim();
-            if (pub.toLowerCase() === _publisher.toLowerCase())
-                result.push(g);
+            if (pub.toLowerCase() !== _publisher.toLowerCase()) continue;
+
+            if (g.playCount === 0) unplayed.push(g);
+            else                   played.push(g);
         }
-        return result;
+
+        function sortGroup(arr) {
+            return arr.slice().sort(function(a, b) {
+                var diff = b.rating - a.rating;
+                return diff !== 0 ? diff : (Math.random() - 0.5);
+            });
+        }
+
+        return sortGroup(unplayed).concat(sortGroup(played)).slice(0, 8);
     }
 
     readonly property bool hasGames: _games.length > 0
-    implicitHeight: hasGames ? _title.height + vpx(14) + _grid.height : 0
-    visible: hasGames
+    implicitHeight: hasGames ? _title.height + vpx(14) + _grid.height
+                             : _title.height + vpx(14) + vpx(60)
+    visible: true
 
     Text {
         id: _title
@@ -53,17 +67,26 @@ Item {
         color: "#607d8b"
     }
 
+    Text {
+        anchors { top: _title.bottom; left: parent.left; topMargin: vpx(14) }
+        visible: !root.hasGames
+        text: "No other games found for this publisher."
+        font.pixelSize: vpx(13); font.family: global.fonts.sans
+        color: "#ffffff"
+    }
+
     GridView {
         id: _grid
+        visible: root.hasGames
         anchors { top: _title.bottom; left: parent.left; right: parent.right; topMargin: vpx(14) }
 
         readonly property real cardW: Math.floor((width - vpx(30) * 3) / 4)
         readonly property real imgH:  Math.round(cardW * 0.70)
         readonly property real cardH: imgH
 
-        cellWidth:  cardW + vpx(20)
+        cellWidth: cardW + vpx(20)
         cellHeight: cardH + vpx(10)
-        height:     Math.ceil(root._games.length / 4) * cellHeight - vpx(10)
+        height:  Math.ceil(root._games.length / 4) * cellHeight - vpx(10)
 
         model: root._games.length
         interactive: false
@@ -106,7 +129,7 @@ Item {
             readonly property bool isCurrent: GridView.isCurrentItem && _grid.activeFocus
             readonly property var  _game:     root._games[index] || null
 
-            width:  _grid.cardW
+            width: _grid.cardW
             height: _grid.cardH
 
             Item {
@@ -231,7 +254,7 @@ Item {
                 property real _m: vpx(2) + borderExtra
                 x: -_m
                 y: -_m
-                width:  _card.width + _m * 2
+                width: _card.width + _m * 2
                 height: _imgArea.height + vpx(85) + _m * 2
                 border.width: vpx(1.5) + borderExtra
                 border.color: "#c7c7c7"
@@ -254,9 +277,9 @@ Item {
 
             onIsCurrentChanged: { if (isCurrent) _borderPulse.restart(); }
 
-            scale:   isCurrent ? 1.05 : 1.0
+            scale: isCurrent ? 1.05 : 1.0
             opacity: isCurrent ? 1.0  : (_grid.activeFocus ? 0.65 : 0.80)
-            Behavior on scale   { NumberAnimation { duration: 120 } }
+            Behavior on scale { NumberAnimation { duration: 120 } }
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
             MouseArea {
