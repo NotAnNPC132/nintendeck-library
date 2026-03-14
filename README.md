@@ -4,9 +4,9 @@
 
 > 📢 There will be many updates constantly, until a final version 1.0 is declared in the theme.cfg file. 👀
 
-![screen0](https://github.com/ZagonAb/wtf-library/blob/1a1a4ef91c7f7cfbe180eb643daaf1ea8140e642/.meta/screenshots/0.png)
+![screen0](https://github.com/ZagonAb/wtf-library/blob/f29d4e63c63e1994fad701682e9ed20fb178338a/.meta/screenshots/0.png)
 
-![screen5](https://github.com/ZagonAb/wtf-library/blob/54c9c17e78e4483d30415676e1da34283884adff/.meta/screenshots/5.png)
+![screen5](https://github.com/ZagonAb/wtf-library/blob/f29d4e63c63e1994fad701682e9ed20fb178338a/.meta/screenshots/1.png)
 
 # RetroArch Monochrome Icons
 
