@@ -8,6 +8,7 @@ Item {
     property alias favoritesModel: favoritesModel
     property alias lastPlayedModel: lastPlayedModel
     property bool favoritesVisible: favoritesModel.count > 0
+    readonly property int allGamesCount: allGamesModel.count
 
     SortFilterProxyModel {
         id: allGamesModel
@@ -42,16 +43,16 @@ Item {
 
         Component.onCompleted: {
             collectionsListModel.append({
-                name: "All Games",   shortName: "allgames",
+                name: "All Games", shortName: "allgames",
                 games: allGamesModel, isCollections: false
             });
             collectionsListModel.append({
-                name: "Favorites",   shortName: "favorites",
+                name: "Favorites", shortName: "favorites",
                 games: favoritesModel, isCollections: false
             });
             collectionsListModel.append({
                 name: "Collections", shortName: "collections",
-                games: allGamesModel,  isCollections: true
+                games: allGamesModel, isCollections: true
             });
             collectionsListModel.append({
                 name: "Last Played", shortName: "lastplayed",

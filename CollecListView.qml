@@ -58,12 +58,22 @@ FocusScope {
             property bool hasFocus: listView.activeFocus
             property bool hovered: hoverArea.containsMouse
 
-            width:  tabLabel.implicitWidth + vpx(48)
+            readonly property int badgeCount: {
+                switch (model.shortName) {
+                    case "allgames": return collecModel.allGamesCount;
+                    case "favorites": return collecModel.favoritesModel.count;
+                    case "collections": return api.collections.count;
+                    case "lastplayed": return collecModel.lastPlayedModel.count;
+                    default: return 0;
+                }
+            }
+
+            width:  tabRow.implicitWidth + vpx(48)
             height: listView.height
 
             Rectangle {
                 anchors.centerIn: parent
-                width: tabLabel.implicitWidth + vpx(40)
+                width: tabRow.implicitWidth + vpx(40)
                 height: vpx(40)
                 radius: vpx(20)
                 color: tabItem.active
@@ -72,17 +82,36 @@ FocusScope {
                 Behavior on color { ColorAnimation { duration: 150 } }
             }
 
-            Text {
-                id: tabLabel
+            Row {
+                id: tabRow
                 anchors.centerIn: parent
-                text: model.name
-                color: tabItem.active
-                ? (tabItem.hasFocus ? "#000000" : "#ffffff")
-                : "#ffffff"
-                font.family: global.fonts.sans
-                font.pixelSize: vpx(18)
-                font.bold: tabItem.active
-                Behavior on color { ColorAnimation { duration: 150 } }
+                spacing: vpx(7)
+
+                Text {
+                    id: tabLabel
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: model.name.toUpperCase()
+                    color: tabItem.active
+                    ? (tabItem.hasFocus ? "#040608" : "#ffffff")
+                    : "#ffffff"
+                    font.family: global.fonts.sans
+                    font.pixelSize: vpx(18)
+                    font.bold: tabItem.active
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                }
+
+                Text {
+                    id: badgeNum
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: tabItem.badgeCount
+                    font.family: global.fonts.sans
+                    font.pixelSize: vpx(18)
+                    font.bold: true
+                    color: tabItem.active
+                    ? (tabItem.hasFocus ? "#040608" : "#7e848c")
+                    : "#7e848c"
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                }
             }
 
             MouseArea {
