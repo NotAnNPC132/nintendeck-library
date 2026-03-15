@@ -6,7 +6,6 @@ Item {
     id: root
 
     property real gameGridContentY: 0
-
     readonly property string searchQuery: committedQuery
     readonly property bool isSearching: committedQuery.length > 0
 
@@ -23,13 +22,13 @@ Item {
 
     property string committedQuery: ""
 
-    readonly property bool isActive:        inputField.activeFocus || inputField.text.length > 0
-    readonly property bool hasFocus:        inputField.activeFocus
-    readonly property bool hasText:         inputField.text.length > 0
-    readonly property bool credentialsOpen:          credentialsPopup.isOpen
-    readonly property bool credentialsHasText:       credentialsPopup.isOpen && credentialsPopup.credentialsHasText
+    readonly property bool isActive: inputField.activeFocus || inputField.text.length > 0
+    readonly property bool hasFocus: inputField.activeFocus
+    readonly property bool hasText: inputField.text.length > 0
+    readonly property bool credentialsOpen: credentialsPopup.isOpen
+    readonly property bool credentialsHasText: credentialsPopup.isOpen && credentialsPopup.credentialsHasText
     readonly property bool credentialsButtonFocused: credentialsPopup.isOpen && credentialsPopup.buttonFocused
-    readonly property bool raFocused:       raBtn.activeFocus
+    readonly property bool raFocused: raBtn.activeFocus
     readonly property color _bgDark: "#05070a"
     readonly property color _bgLight: "#ffffff"
     readonly property color _iconIdle: "#ffffff"
@@ -41,20 +40,21 @@ Item {
     readonly property color _currentTextColor: isActive ? "#000000" : _textColor
     readonly property color _currentPlaceholder: isActive ? "#000000" : _placeholder
     property bool batteryCharging: api.device.batteryCharging
-    property real batteryPercent:  api.device.batteryPercent
-    property int  batteryLevel:    isNaN(batteryPercent) ? -1 : Math.round(batteryPercent * 100)
-    property bool hasBattery:      !isNaN(api.device.batteryPercent)
+    property real batteryPercent: api.device.batteryPercent
+    property int  batteryLevel: isNaN(batteryPercent) ? -1 : Math.round(batteryPercent * 100)
+    property bool hasBattery: !isNaN(api.device.batteryPercent)
+    property string _raUser: api.memory.has("ra_api_user") ? api.memory.get("ra_api_user") : ""
 
     Timer {
         id: batteryTimer
         interval: 30000
-        running:  true
-        repeat:   true
+        running: true
+        repeat: true
         onTriggered: {
             root.batteryCharging = api.device.batteryCharging
             root.batteryPercent  = api.device.batteryPercent
-            root.batteryLevel    = isNaN(root.batteryPercent) ? -1 : Math.round(root.batteryPercent * 100)
-            root.hasBattery      = !isNaN(api.device.batteryPercent)
+            root.batteryLevel = isNaN(root.batteryPercent) ? -1 : Math.round(root.batteryPercent * 100)
+            root.hasBattery = !isNaN(api.device.batteryPercent)
         }
     }
 
@@ -327,6 +327,71 @@ Item {
             spacing: vpx(12)
             layoutDirection: Qt.RightToLeft
 
+            Item {
+                id: raUserAvatar
+                width:  vpx(26)
+                height: vpx(26)
+                anchors.verticalCenter: parent.verticalCenter
+                visible: root._raUser !== ""
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "#2a3447"
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: _raAvatarImg.status !== Image.Ready
+                    text: root._raUser.length > 0 ? root._raUser.charAt(0).toUpperCase() : ""
+                    font.pixelSize: vpx(12)
+                    font.bold: true
+                    font.family: global.fonts.sans
+                    color: "#ffffff"
+                }
+
+                Rectangle {
+                    id: _raAvatarMask
+                    anchors.fill: parent
+                    radius: width / 2
+                    visible: false
+                }
+
+                Image {
+                    id: _raAvatarImg
+                    anchors.fill: parent
+                    source: root._raUser !== ""
+                        ? "https://media.retroachievements.org/UserPic/" + root._raUser + ".png"
+                        : ""
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    mipmap: true
+                    smooth: true
+                    visible: status === Image.Ready
+                    layer.enabled: status === Image.Ready
+                    layer.effect: OpacityMask {
+                        maskSource: _raAvatarMask
+                    }
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "transparent"
+                    border.width: vpx(1.5)
+                    border.color: Qt.rgba(1, 1, 1, 0.30)
+                }
+            }
+
+            Rectangle {
+                width:   vpx(1)
+                height:  vpx(18)
+                color: "#555555"
+                opacity: 0.7
+                anchors.verticalCenter: parent.verticalCenter
+                visible: root._raUser !== ""
+            }
+
             Text {
                 id: clockLabel
                 anchors.verticalCenter: parent.verticalCenter
@@ -500,7 +565,10 @@ Item {
         width:  parent.width
         height: vpx(260)
 
-        onCredentialsSaved: raBtn.forceActiveFocus()
+        onCredentialsSaved: {
+            raBtn.forceActiveFocus()
+            root._raUser = api.memory.has("ra_api_user") ? api.memory.get("ra_api_user") : ""
+        }
         onPopupClosed: raBtn.forceActiveFocus()
     }
 
@@ -509,6 +577,7 @@ Item {
         root.batteryPercent = api.device.batteryPercent
         root.batteryLevel = isNaN(root.batteryPercent) ? -1 : Math.round(root.batteryPercent * 100)
         root.hasBattery = !isNaN(api.device.batteryPercent)
+        root._raUser = api.memory.has("ra_api_user") ? api.memory.get("ra_api_user") : ""
     }
 
     function activate() { inputField.forceActiveFocus(); }
