@@ -19,6 +19,7 @@ Rectangle {
     signal playClicked()
     signal backClicked()
     signal filterClicked()
+    signal logoClicked()
 
     property bool showFilter: false
     property int  hubActiveTab: 0
@@ -72,19 +73,71 @@ Rectangle {
         return "SELECT";
     }
 
-    Image {
-        id: logoIcon
+    Item {
+        id: logoWidget
         anchors {
             left: parent.left
-            leftMargin: vpx(18)
+            leftMargin: vpx(14)
             verticalCenter: parent.verticalCenter
         }
-        width: vpx(40)
-        height: vpx(40)
-        source: "assets/icons/icon_0.png"
-        fillMode: Image.PreserveAspectFit
-        mipmap: true
-        smooth: true
+        width:  logoRow.implicitWidth + vpx(10)
+        height: vpx(36)
+
+        Rectangle {
+            anchors.fill: parent
+            color: "#ffffff"
+            opacity: logoHover.containsMouse ? 0.06 : 0.0
+            radius: vpx(4)
+            Behavior on opacity { NumberAnimation { duration: 130 } }
+        }
+
+        Row {
+            id: logoRow
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: vpx(10)
+
+            Rectangle {
+                id: logoPill
+                anchors.verticalCenter: parent.verticalCenter
+                height: vpx(28)
+                width: pegasusLabel.implicitWidth + vpx(18)
+                radius: height / 2
+                color: logoHover.containsMouse ? "#d8d8d8" : "#ffffff"
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                Text {
+                    id: pegasusLabel
+                    anchors.centerIn: parent
+                    text: "PEGASUS-FE"
+                    color: "#0b1117"
+                    font.family: global.fonts.sans
+                    font.pixelSize: vpx(11)
+                    font.bold: true
+                    font.letterSpacing: vpx(0.8)
+                }
+
+            }
+
+            Text {
+                id: menuLabel
+                anchors.verticalCenter: parent.verticalCenter
+                text: "WTF-LIBRARY"
+                color: logoHover.containsMouse ? "#cccccc" : "#ffffff"
+                font.family: global.fonts.sans
+                font.pixelSize:  vpx(13)
+                font.bold: true
+                font.letterSpacing: vpx(0.8)
+                Behavior on color { ColorAnimation { duration: 150 } }
+            }
+        }
+
+        MouseArea {
+            id: logoHover
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: bottomBar.logoClicked()
+        }
     }
 
     Row {

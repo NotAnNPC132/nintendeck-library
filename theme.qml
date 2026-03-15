@@ -116,12 +116,19 @@ FocusScope {
             _searchOrigin = (prev === "home") ? "home" : "library";
     }
 
-    Timer { id: _focusGridTimer;    interval: 0; repeat: false; onTriggered: { if (gameGridLoader.item) gameGridLoader.item.forceActiveFocus() } }
-    Timer { id: _focusHomeTimer;    interval: 0; repeat: false; onTriggered: { if (homeLoader.item) homeLoader.item.forceActiveFocus() } }
+    Timer { id: _focusGridTimer; interval: 0; repeat: false; onTriggered: { if (gameGridLoader.item) gameGridLoader.item.forceActiveFocus() } }
+    Timer { id: _focusHomeTimer; interval: 0; repeat: false; onTriggered: { if (homeLoader.item) homeLoader.item.forceActiveFocus() } }
     Timer { id: _restoreSearchFocusTimer; interval: 0; repeat: false; onTriggered: searchBar.activate() }
-    Timer { id: _focusHubTimer;     interval: 0; repeat: false; onTriggered: { if (hubLoader.item) hubLoader.item.forceActiveFocus() } }
-    Timer { id: _focusCollecTimer;  interval: 0; repeat: false; onTriggered: { collecBar.focus = true } }
-    Timer { id: _focusRATimer;      interval: 0; repeat: false; onTriggered: { if (raLoader.item)  raLoader.item.forceActiveFocus() } }
+    Timer { id: _focusHubTimer; interval: 0; repeat: false; onTriggered: { if (hubLoader.item) hubLoader.item.forceActiveFocus() } }
+    Timer { id: _focusCollecTimer; interval: 0; repeat: false; onTriggered: { collecBar.focus = true } }
+    Timer { id: _focusRATimer; interval: 0; repeat: false; onTriggered: { if (raLoader.item)  raLoader.item.forceActiveFocus() } }
+
+    Timer {
+        id: _logoSplashTimer
+        interval: 3000
+        repeat: false
+        onTriggered: splashScreen.hide()
+    }
 
     function _restoreFocusAfterHub() {
         if (hubLoader._prevScreen === "library") {
@@ -460,6 +467,12 @@ FocusScope {
             hubMediaView: root.onHub && hubLoader.item ? hubLoader.item.mediaViewOpen : false
 
             onFilterClicked: sortMenu.open()
+
+            onLogoClicked: {
+                _logoSplashTimer.stop()
+                splashScreen.opacity = 1.0
+                _logoSplashTimer.start()
+            }
 
             onFavoriteClicked: {
                 if (root.onHub) {
