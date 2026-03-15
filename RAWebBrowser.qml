@@ -468,12 +468,22 @@ FocusScope {
             readonly property var  _a:      root._achievements[index] || {}
             readonly property bool _earned: _a.earned || false
 
-            Rectangle {
-                anchors.fill: parent; anchors.margins: vpx(3); radius: vpx(6)
-                color: _achItem._sel ? "#0f2030" : "transparent"
-                border.width: _achItem._sel ? vpx(1.5) : 0
-                border.color: "white"
-                Behavior on color { ColorAnimation { duration: 120 } }
+            Item {
+                id: _achGlowSource
+                anchors.fill: _badge
+                visible: false
+                Image {
+                    anchors.fill: parent
+                    source: _achItem._earned ? _achItem._a.badgeUrl : _achItem._a.badgeLocked
+                    fillMode: Image.PreserveAspectFit; asynchronous: true; smooth: true
+                }
+            }
+            FastBlur {
+                anchors.fill: _achGlowSource
+                anchors.margins: vpx(-15)
+                source: _achGlowSource; radius: 75; transparentBorder: true
+                opacity: _achItem._sel && _achGrid.activeFocus ? 0.40 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 180 } }
             }
 
             Image {
@@ -487,6 +497,45 @@ FocusScope {
                 Rectangle {
                     anchors.fill: parent; radius: vpx(6); color: "#1c2e3e"
                     visible: parent.status !== Image.Ready
+                }
+            }
+
+            Rectangle {
+                id: _achSelRect
+                anchors.fill: _badge
+                property real borderExtra: 0
+                anchors.margins: vpx(-3.5) - borderExtra
+                border.width: vpx(1.5) + borderExtra
+                border.color: "#c7c7c7"
+                color: "transparent"
+                radius: 0
+                opacity: 0
+
+                SequentialAnimation on opacity {
+                    running: _achItem._sel && _achGrid.activeFocus
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 0.8; duration: 600; easing.type: Easing.InOutQuad }
+                    NumberAnimation { to: 0.3; duration: 600; easing.type: Easing.InOutQuad }
+                    onStopped: _achSelRect.opacity = 0
+                }
+                SequentialAnimation on borderExtra {
+                    id: _achBorderPulse; running: false
+                    NumberAnimation { to: vpx(3.5); duration: 150; easing.type: Easing.OutQuad }
+                    NumberAnimation { to: 0;        duration: 250; easing.type: Easing.InQuad }
+                }
+            }
+
+            scale: _achItem._sel && _achGrid.activeFocus ? 1.05 : 1.0
+            Behavior on scale { NumberAnimation { duration: 120 } }
+
+            GridView.onIsCurrentItemChanged: {
+                if (_achItem._sel && _achGrid.activeFocus) _achBorderPulse.restart()
+            }
+
+            Connections {
+                target: root
+                function on_SelIdxChanged() {
+                    if (_achItem._sel && _achGrid.activeFocus) _achBorderPulse.restart()
                 }
             }
 
@@ -682,7 +731,7 @@ FocusScope {
             bottom: parent.bottom
         }
         visible: !root._loading && root._errorMsg === "" && root._activeTab === "info"
-        focus:   root.visible && root._activeTab === "info"
+        focus: root.visible && root._activeTab === "info"
         clip: true
         contentHeight: _bigPictureRoot.height
         flickableDirection: Flickable.VerticalFlick
@@ -734,7 +783,7 @@ FocusScope {
                     id: _infoCol
                     anchors {
                         top: parent.top; topMargin: vpx(16)
-                        left: parent.left;   leftMargin: vpx(28)
+                        left: parent.left; leftMargin: vpx(28)
                         right: parent.right; rightMargin: vpx(28)
                     }
                     spacing: vpx(0)
@@ -867,7 +916,7 @@ FocusScope {
             if (api.keys.isNextPage(event)) { event.accepted = true; root._activeTab = "games"; return; }
             if (api.keys.isPrevPage(event)) { event.accepted = true; root._activeTab = "achievements"; return; }
         }
-        Keys.onUpPressed:   { event.accepted = true; contentY = Math.max(0, contentY - vpx(40)); }
+        Keys.onUpPressed: { event.accepted = true; contentY = Math.max(0, contentY - vpx(40)); }
         Keys.onDownPressed: { event.accepted = true; contentY = Math.min(Math.max(0, contentHeight - height), contentY + vpx(40)); }
     }
 
@@ -913,10 +962,10 @@ FocusScope {
             id: _gamesGrid
             anchors {
                 fill: parent
-                topMargin:    vpx(24)
+                topMargin: vpx(24)
                 bottomMargin: vpx(24)
-                leftMargin:   vpx(24)
-                rightMargin:  vpx(24)
+                leftMargin: vpx(24)
+                rightMargin: vpx(24)
             }
             visible: !root._gamesLoading && root._gamesList.length > 0
             focus: root.visible && root._activeTab === "games"
@@ -924,11 +973,11 @@ FocusScope {
             model: root._gamesList.length
             currentIndex: root._gamesSelIdx
 
-            readonly property real cardW:  Math.floor((width - vpx(16) * 4) / 5)
-            readonly property real imgH:   Math.round(cardW * 0.45)
-            readonly property real infoH:  vpx(52)
-            readonly property real cardH:  imgH + infoH
-            readonly property int  _cols:  5
+            readonly property real cardW: Math.floor((width - vpx(16) * 4) / 5)
+            readonly property real imgH: Math.round(cardW * 0.45)
+            readonly property real infoH: vpx(52)
+            readonly property real cardH: imgH + infoH
+            readonly property int  _cols: 5
 
             cellWidth:  Math.floor(width / _cols)
             cellHeight: cardH + vpx(10)
@@ -938,7 +987,7 @@ FocusScope {
                 id: _gameCell
 
                 readonly property bool isCurrent: index === root._gamesSelIdx
-                readonly property var  _g:        root._gamesList[index] || {}
+                readonly property var _g: root._gamesList[index] || {}
                 readonly property bool _complete: (_g.pct || 0) === 100
                 readonly property string _thumb: {
                     if (_g.imgIngame && _g.imgIngame !== "") return _g.imgIngame;
@@ -1124,7 +1173,7 @@ FocusScope {
                     var g = root._gamesList[root._gamesSelIdx];
                     if (g && g.id !== "") {
                         root._resolvedId = g.id;
-                        root._gamesList  = [];
+                        root._gamesList = [];
                         root._activeTab  = "achievements";
                         root.load();
                     }
@@ -1138,7 +1187,6 @@ FocusScope {
             }
         }
     }
-
 
     Keys.onPressed: {
         if (api.keys.isCancel(event) || event.key === Qt.Key_Escape) {
