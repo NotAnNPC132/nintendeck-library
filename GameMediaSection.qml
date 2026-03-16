@@ -1,18 +1,19 @@
+// WTF-Library Theme
+// Copyright (C) 2026 Gonzalo
+//
+// Licensed under Creative Commons
+// Attribution-NonCommercial-ShareAlike 4.0 International.
+//
+// https://creativecommons.org/licenses/by-nc-sa/4.0/
+
 import QtQuick 2.15
 import QtGraphicalEffects 1.15
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  GameMediaSection.qml
-//  Shows all game media assets in a 4-column × 2-row thumbnail grid.
-//  Selecting an item emits mediaViewRequested → GameHubView opens GameMediaView.
-// ─────────────────────────────────────────────────────────────────────────────
 
 FocusScope {
     id: root
 
     property var game: null
 
-    // ── Section interface (expected by GameHubView._connectSection) ───────────
     signal tabFocusRequested()
     signal mediaViewRequested(var mediaList, int startIndex)
 
@@ -26,13 +27,11 @@ FocusScope {
 
     implicitHeight: _header.height + vpx(12) + _grid.height + vpx(8)
 
-    // ── Media gathering ───────────────────────────────────────────────────────
     property var availableMedia: {
         if (!game) return []
         var assets = game.assets
-        var all    = []
+        var all = []
 
-        // --- Screenshots ---
         if (assets.screenshotList && assets.screenshotList.length > 0) {
             for (var i = 0; i < assets.screenshotList.length; i++) {
                 var ss = assets.screenshotList[i]
@@ -96,7 +95,6 @@ FocusScope {
             }
         }
 
-        // --- Videos ---
         if (assets.videoList && assets.videoList.length > 0) {
             for (var m = 0; m < assets.videoList.length; m++) {
                 var vs = assets.videoList[m]
@@ -114,7 +112,6 @@ FocusScope {
         return all
     }
 
-    // ── Header ────────────────────────────────────────────────────────────────
     Row {
         id: _header
         anchors { top: parent.top; left: parent.left }
@@ -139,7 +136,6 @@ FocusScope {
         }
     }
 
-    // ── Empty state ───────────────────────────────────────────────────────────
     Text {
         anchors { top: _header.bottom; topMargin: vpx(20); horizontalCenter: parent.horizontalCenter }
         visible: root.availableMedia.length === 0
@@ -149,19 +145,18 @@ FocusScope {
         font.pixelSize: vpx(13)
     }
 
-    // ── Grid ─────────────────────────────────────────────────────────────────
     GridView {
         id: _grid
         anchors {
             top: _header.bottom; topMargin: vpx(12)
-            left: parent.left;   right: parent.right
+            left: parent.left; right: parent.right
         }
 
         readonly property int  _columns: 4
         readonly property real _cellW: Math.floor(parent.width / _columns)
         cellWidth:  _cellW
-        cellHeight: Math.floor(_cellW * 9 / 16)   // 16:9 thumbnails
-        height:     cellHeight * 2                 // show exactly 2 rows
+        cellHeight: Math.floor(_cellW * 9 / 16)
+        height:     cellHeight * 2
         clip: false
         focus: true
         keyNavigationEnabled: true
@@ -174,7 +169,6 @@ FocusScope {
                 return
             }
             if (!event.isAutoRepeat && event.key === Qt.Key_Up) {
-                // if we're on the first row, go back to the tab bar
                 if (_grid.currentIndex < _columns) {
                     event.accepted = true
                     root.tabFocusRequested()
@@ -188,20 +182,16 @@ FocusScope {
             }
         }
 
-        // ── Cell delegate ─────────────────────────────────────────────────────
         delegate: Item {
             id: _cell
             width:  _grid.cellWidth
             height: _grid.cellHeight
 
             readonly property bool isCurrent: _grid.activeFocus && _grid.currentIndex === index
-
-            // Thumbnail source used for both the visible card and the glow
             readonly property string _thumbSrc: modelData.isVideo
                 ? (root.game ? (root.game.assets.screenshot || root.game.assets.background || "") : "")
                 : modelData.source
 
-            // ── 1. Glow source (invisible, feeds FastBlur) ────────────────────
             Item {
                 id: _glowSource
                 anchors { fill: _card; margins: vpx(-4) }
@@ -220,7 +210,6 @@ FocusScope {
                 }
             }
 
-            // ── 2. FastBlur glow ──────────────────────────────────────────────
             FastBlur {
                 anchors { fill: _glowSource; margins: vpx(-16) }
                 source: _glowSource
@@ -230,7 +219,6 @@ FocusScope {
                 Behavior on opacity { NumberAnimation { duration: 180 } }
             }
 
-            // ── 3. Card with rounded clipping ─────────────────────────────────
             Rectangle {
                 id: _card
                 anchors { fill: parent; margins: vpx(10) }
@@ -238,7 +226,6 @@ FocusScope {
                 color: "#0d1921"
                 layer.enabled: true
 
-                // Image thumbnail
                 Image {
                     anchors.fill: parent
                     source: modelData.isVideo ? "" : modelData.source
@@ -248,7 +235,6 @@ FocusScope {
                     visible: !modelData.isVideo
                 }
 
-                // Video overlay: game screenshot (dim) + play badge
                 Item {
                     anchors.fill: parent
                     visible: modelData.isVideo
@@ -291,7 +277,6 @@ FocusScope {
                     }
                 }
 
-                // Bottom gradient for label legibility
                 Rectangle {
                     anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
                     height: vpx(24)
@@ -301,7 +286,6 @@ FocusScope {
                     }
                 }
 
-                // Media type label
                 Text {
                     anchors {
                         left: parent.left; right: parent.right; bottom: parent.bottom
@@ -316,7 +300,6 @@ FocusScope {
                 }
             }
 
-            // ── 4. Selection rect (pulsing border, identical to GamesGridView) ─
             Rectangle {
                 id: _selectionRect
                 anchors { fill: _card; margins: -vpx(3.5) - _borderExtra }
@@ -343,7 +326,6 @@ FocusScope {
                 }
             }
 
-            // ── 5. Scale ──────────────────────────────────────────────────────
             scale: _cell.isCurrent ? 1.05 : 1.0
             Behavior on scale { NumberAnimation { duration: 120 } }
 
@@ -351,7 +333,6 @@ FocusScope {
                 if (_cell.isCurrent) _borderPulse.restart()
             }
 
-            // Mouse: single click focuses, double click opens viewer
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
