@@ -30,6 +30,9 @@ FocusScope {
     property string currentSortId: "alpha_asc"
     property bool preserveSourceOrder: false
 
+    property string lastNavDirection: "right"
+    property bool _restoringIndex: false
+
     SortFilterProxyModel {
         id: sortProxy
 
@@ -58,8 +61,24 @@ FocusScope {
                 return root.gamesModel
     }
 
-    onIsCollectionsChanged: { inCollectionGames = false; activeCollectionGames = null; grid.currentIndex = 0 }
-    onGamesModelChanged: { inCollectionGames = false; grid.currentIndex = 0 }
+    onIsCollectionsChanged: {
+        inCollectionGames = false
+        activeCollectionGames = null
+        if (isCollections) {
+            Qt.callLater(function() {
+                var saved = api.memory.get("gridIndex_collections")
+                grid.currentIndex = (saved !== undefined) ? saved : 0
+            })
+        } else {
+            api.memory.unset("gridIndex_collections")
+            grid.currentIndex = 0
+        }
+    }
+
+    onGamesModelChanged: {
+        inCollectionGames = false
+        if (!root.isCollections) grid.currentIndex = 0
+    }
 
     function toggleFavorite() {
         if (currentEntry && showingGames) currentEntry.favorite = !currentEntry.favorite
@@ -68,9 +87,19 @@ FocusScope {
         if (grid.currentItem) activateEntry(grid.currentItem.entry)
     }
 
+    function saveIndex() {
+        var key = "gridIndex_" + collecBar.currentShortName
+        api.memory.set(key, grid.currentIndex)
+    }
+
+    function restoreIndex() {
+        var key = "gridIndex_" + collecBar.currentShortName
+        var saved = api.memory.get(key)
+        grid.currentIndex = (saved !== undefined) ? saved : 0
+    }
+
     readonly property int  columns: 6
     readonly property real cellWidth:  Math.floor(width / columns)
-
     readonly property bool showingCollectionList: isCollections && !inCollectionGames
     readonly property real gridAvailableHeight:   height
     readonly property real cellHeight: showingCollectionList
@@ -211,6 +240,90 @@ FocusScope {
                 font.family: global.fonts.sans; font.pixelSize: vpx(11); wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter; style: Text.Outline; styleColor: "#05070a"; z: 2
             }
+
+            Item {
+                id: gameCountOverlay
+                anchors.fill: cover
+                visible: root.showingCollectionList && cell.isCurrent && grid.activeFocus
+                z: 3
+                clip: true
+
+                Rectangle {
+                    id: dimmingBg
+                    anchors.fill: parent
+                    color: Qt.rgba(0, 0, 0, 0.90)
+                    opacity: 0.0
+                    Behavior on opacity { NumberAnimation { duration: 250 } }
+                }
+
+                Column {
+                    id: gameCountColumn
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: vpx(2)
+
+                    property real offsetX: 0
+                    transform: Translate { x: gameCountColumn.offsetX }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: entry && entry.games ? entry.games.count : ""
+                        color: "#ffffff"
+                        font.family: global.fonts.condensed
+                        font.pixelSize: vpx(38)
+                        font.bold: true
+                    }
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "GAMES"
+                        color: "white"
+                        font.family: global.fonts.condensed
+                        font.pixelSize: vpx(18)
+                        font.bold: true
+                        font.letterSpacing: vpx(2)
+                    }
+                }
+
+                SequentialAnimation {
+                    id: slideAnim
+                    running: false
+
+                    property real fromX: vpx(120)
+                    property real exitX: vpx(-120)
+
+                    function startForDirection(dir) {
+                        slideAnim.stop()
+                        dimmingBg.opacity = 0.0
+
+                        if (dir === "left") { fromX = vpx(-120); exitX = vpx(120) }
+                        else                { fromX =  vpx(120); exitX = vpx(-120) }
+
+                        gameCountColumn.offsetX = fromX
+                        dimmingBg.opacity = 0.55
+                        slideAnim.restart()
+                    }
+
+                    NumberAnimation { target: gameCountColumn; property: "offsetX"; to: 0; duration: 400; easing.type: Easing.OutCubic }
+                    PauseAnimation  { duration: 1000 }
+                    NumberAnimation { target: gameCountColumn; property: "offsetX"; to: slideAnim.exitX; duration: 400; easing.type: Easing.InCubic }
+
+                    onStopped: {
+                        if (!gameCountOverlay.visible) return
+                            dimmingBg.opacity = 0.0
+                    }
+                }
+
+                onVisibleChanged: {
+                    if (visible) {
+                        slideAnim.startForDirection(root.lastNavDirection)
+                    } else {
+                        slideAnim.stop()
+                        dimmingBg.opacity = 0.0
+                        gameCountColumn.offsetX = 0
+                    }
+                }
+            }
+
             Item {
                 id: favBadge
                 readonly property bool sortActive: cell.sortBadgeText !== ""
@@ -271,7 +384,18 @@ FocusScope {
                     NumberAnimation { to: 0;        duration: 250; easing.type: Easing.InQuad }
                 }
             }
-            onIsCurrentChanged: { if (cell.isCurrent && grid.activeFocus) borderPulse.restart() }
+            onIsCurrentChanged: {
+                if (cell.isCurrent && grid.activeFocus) {
+                    borderPulse.restart()
+                    if (root.isCollections && !root._restoringIndex) {
+                        if (root.inCollectionGames) {
+                            api.memory.set("gridIndex_" + root.activeCollectionName, grid.currentIndex)
+                        } else {
+                            api.memory.set("gridIndex_collections", grid.currentIndex)
+                        }
+                    }
+                }
+            }
             scale: cell.isCurrent && grid.activeFocus ? 1.05 : 1.0
             Behavior on scale { NumberAnimation { duration: 120 } }
             MouseArea {
@@ -290,14 +414,26 @@ FocusScope {
             event.accepted = true
         }
 
+        Keys.onLeftPressed:  { root.lastNavDirection = "left";  event.accepted = false }
+        Keys.onRightPressed: { root.lastNavDirection = "right"; event.accepted = false }
+
         Keys.onPressed: {
             if (!event.isAutoRepeat && api.keys.isAccept(event))  { event.accepted = true; if (grid.currentItem) root.activateEntry(grid.currentItem.entry); return }
             if (api.keys.isDetails(event) && root.showingGames)   { event.accepted = true; root.toggleFavorite(); return }
             if (api.keys.isCancel(event)) {
                 event.accepted = true
-                if (root.isCollections && root.inCollectionGames) { root.inCollectionGames = false; root.activeCollectionGames = null; grid.currentIndex = 0 }
-                else root.exitRequested()
-                    return
+                if (root.isCollections && root.inCollectionGames) {
+                    api.memory.set("gridIndex_" + root.activeCollectionName, grid.currentIndex)
+                    var savedIdx = api.memory.get("gridIndex_collections")
+                    root._restoringIndex = true
+                    root.inCollectionGames = false
+                    root.activeCollectionGames = null
+                    grid.currentIndex = (savedIdx !== undefined) ? savedIdx : 0
+                    Qt.callLater(function() { root._restoringIndex = false })
+                } else {
+                    root.exitRequested()
+                }
+                return
             }
             if (api.keys.isPrevPage(event)) { event.accepted = true; root.prevTabRequested(); return }
             if (api.keys.isNextPage(event)) { event.accepted = true; root.nextTabRequested(); return }
@@ -316,10 +452,12 @@ FocusScope {
         if (!entry) return
             if (root.isCollections && !root.inCollectionGames) {
                 if (!entry.games || entry.games.count === 0) return
+                    api.memory.set("gridIndex_collections", grid.currentIndex)
                     root.activeCollectionName  = entry.name
                     root.activeCollectionGames = entry.games
                     root.inCollectionGames     = true
-                    grid.currentIndex          = 0
+                    var saved = api.memory.get("gridIndex_" + entry.name)
+                    grid.currentIndex = (saved !== undefined) ? saved : 0
             } else {
                 root.openHub(entry)
             }
