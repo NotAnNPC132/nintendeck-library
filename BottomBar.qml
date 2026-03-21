@@ -38,8 +38,10 @@ Rectangle {
     property bool credsHasText: false
     property bool hubMediaTab: false
     property bool hubMediaView: false
+    property bool keyboardOpen: false
 
-    readonly property bool showFavorite: (activeView === "grid"
+    readonly property bool showFavorite: !keyboardOpen
+                                      && (activeView === "grid"
                                       || (activeView === "hub" && hubGridFocus && !hubRaGridFocus))
                                       && activeView !== "ra"
                                       && activeView !== "home_ra"
@@ -48,7 +50,8 @@ Rectangle {
                                       && activeView !== "search_creds"
                                       && !hubMediaTab
                                       && !hubMediaView
-    readonly property bool showSelect: !hubMediaView
+    readonly property bool showSelect: !keyboardOpen
+                                    && !hubMediaView
                                     && (activeView === "grid"
                                     || activeView === "collections"
                                     || activeView === "home"
@@ -62,6 +65,7 @@ Rectangle {
     readonly property bool isFav: currentGame ? (currentGame.favorite === true) : false
 
     readonly property string bLabel: {
+        if (keyboardOpen) return "BACK";
         if (activeView === "search" && searchHasText) return "BACKSPACE";
         if (activeView === "search_ra" && searchHasText) return "BACKSPACE";
         if (activeView === "search_creds" && credsHasText) return "BACKSPACE";

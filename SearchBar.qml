@@ -20,6 +20,9 @@ Item {
     signal focusDownRequested()
     signal backToGridRequested()
 
+    property bool keyboardOpen: false
+    property bool _vkbTyping: false
+
     property bool semiTransparent: false
     property bool solidInHub: false
     property bool hidden: false
@@ -29,7 +32,6 @@ Item {
     Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.InOutQuad } }
 
     property string committedQuery: ""
-
     readonly property bool isActive: inputField.activeFocus || inputField.text.length > 0
     readonly property bool hasFocus: inputField.activeFocus
     readonly property bool hasText: inputField.text.length > 0
@@ -68,7 +70,14 @@ Item {
 
     Timer {
         id: debounceTimer
-        interval: 250
+        interval: 300
+        repeat: false
+        onTriggered: root.committedQuery = Utils.normalizeForSearch(inputField.text)
+    }
+
+    Timer {
+        id: vkbDebounceTimer
+        interval: 500
         repeat: false
         onTriggered: root.committedQuery = Utils.normalizeForSearch(inputField.text)
     }
@@ -136,7 +145,7 @@ Item {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.IBeamCursor
-                onClicked: inputField.forceActiveFocus()
+                onDoubleClicked: root._activateSearch()
             }
         }
 
@@ -157,7 +166,7 @@ Item {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.IBeamCursor
-                onClicked: inputField.forceActiveFocus()
+                onDoubleClicked: root._activateSearch()
             }
         }
 
@@ -185,6 +194,8 @@ Item {
             maximumLength: 80
             selectionColor: "#2a6496"
             selectedTextColor: "#ffffff"
+            activeFocusOnPress: false
+            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
 
             Text {
                 anchors.fill: parent
@@ -196,10 +207,24 @@ Item {
                 Behavior on color { ColorAnimation { duration: 300; easing.type: Easing.InOutQuad } }
             }
 
-            onTextChanged: debounceTimer.restart()
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.IBeamCursor
+                onClicked: inputField.forceActiveFocus()
+                onDoubleClicked: root._activateSearch()
+            }
+
+            onTextChanged: {
+                if (!root._vkbTyping) {
+                    vkbDebounceTimer.stop()
+                    debounceTimer.restart()
+                }
+            }
 
             Keys.onEscapePressed: {
                 inputField.text = "";
+                root.keyboardOpen = false;
+                vkb.hide();
                 root.focusDownRequested();
                 event.accepted = true;
             }
@@ -212,6 +237,13 @@ Item {
             Keys.onUpPressed: { event.accepted = true; }
 
             Keys.onPressed: {
+                if (!event.isAutoRepeat && api.keys.isAccept(event)) {
+                    event.accepted = true
+                    root.keyboardOpen = true
+                    vkb.show()
+                    return
+                }
+
                 if (event.key === Qt.Key_Right) {
                     if (inputField.text.length === 0 ||
                         inputField.cursorPosition === inputField.text.length) {
@@ -580,6 +612,55 @@ Item {
         onPopupClosed: raBtn.forceActiveFocus()
     }
 
+    VirtualKeyboard {
+        id: vkb
+        parent: root.parent ? root.parent : root
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+        bottomBarHeight: vpx(48)
+
+        onKeyTapped: function(ch) {
+            root._vkbTyping = true
+            inputField.text = inputField.text + ch
+            root._vkbTyping = false
+            debounceTimer.stop()
+            vkbDebounceTimer.restart()
+            _vkbRefocusTimer.start()
+        }
+
+        onBackspacePressed: {
+            root._vkbTyping = true
+            if (inputField.text.length > 0)
+                inputField.text = inputField.text.slice(0, -1)
+            root._vkbTyping = false
+            debounceTimer.stop()
+            vkbDebounceTimer.restart()
+            _vkbRefocusTimer.start()
+        }
+
+        onCloseRequested: {
+            _vkbRefocusTimer.stop()
+            root.keyboardOpen = false
+            hide()
+            inputField.forceActiveFocus()
+        }
+    }
+
+    Timer {
+        id: _vkbRefocusTimer
+        interval: 16
+        repeat: false
+        onTriggered: {
+            if (root.keyboardOpen)
+                vkb.forceActiveFocusOnKeyGrid()
+        }
+    }
+
+    function _activateSearch() {
+        inputField.forceActiveFocus()
+        root.keyboardOpen = true
+        vkb.show()
+    }
+
     Component.onCompleted: {
         root.batteryCharging = api.device.batteryCharging
         root.batteryPercent = api.device.batteryPercent
@@ -590,8 +671,15 @@ Item {
 
     function activate() { inputField.forceActiveFocus(); }
     function clearSearch() { inputField.text = ""; }
+    function closeKeyboard() {
+        _vkbRefocusTimer.stop()
+        root.keyboardOpen = false
+        vkb.hide()
+        inputField.forceActiveFocus()
+    }
     function clearSearchImmediate() {
         debounceTimer.stop();
+        vkbDebounceTimer.stop();
         inputField.text = "";
         committedQuery  = "";
     }

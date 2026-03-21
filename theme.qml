@@ -464,6 +464,7 @@ FocusScope {
                         && root._bottomActiveView === "grid"
                         && !root._bottomIsRoot
                         && collecBar.currentShortName !== "lastplayed"
+                        && !searchBar.keyboardOpen
 
             hubActiveTab: root.onHub && hubLoader.item ? hubLoader.item._activeTab     : 0
             hubPlayFocus: root.onHub && hubLoader.item ? hubLoader.item.playHasFocus   : false
@@ -473,6 +474,7 @@ FocusScope {
             credsHasText: searchBar.credentialsHasText
             hubMediaTab:  root.onHub && hubLoader.item ? hubLoader.item._activeTab === hubLoader.item._mediaTabIndex : false
             hubMediaView: root.onHub && hubLoader.item ? hubLoader.item.mediaViewOpen : false
+            keyboardOpen: searchBar.keyboardOpen
 
             onFilterClicked: sortMenu.open()
 
@@ -504,6 +506,10 @@ FocusScope {
             }
 
             onBackClicked: {
+                if (searchBar.keyboardOpen) {
+                    searchBar.closeKeyboard()
+                    return
+                }
                 if (root.onHub) {
                     if (hubLoader.item) hubLoader.item.smartBack();
                 } else if (root.onHome) {
