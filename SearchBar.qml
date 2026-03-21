@@ -23,6 +23,10 @@ Item {
     property bool keyboardOpen: false
     property bool _vkbTyping: false
 
+    property bool   _raVkbMode:          false
+    property string _raActiveField:      "user"
+    property bool   _raVkbSuppressReopen: false
+
     property bool semiTransparent: false
     property bool solidInHub: false
     property bool hidden: false
@@ -80,6 +84,13 @@ Item {
         interval: 500
         repeat: false
         onTriggered: root.committedQuery = Utils.normalizeForSearch(inputField.text)
+    }
+
+    Timer {
+        id: _raVkbSuppressTimer
+        interval: 300
+        repeat: false
+        onTriggered: root._raVkbSuppressReopen = false
     }
 
     Item {
@@ -605,11 +616,42 @@ Item {
         width:  parent.width
         height: vpx(260)
 
+        onUserInputActivated: {
+            root._raVkbMode     = true
+            root._raActiveField = "user"
+            if (!root._raVkbSuppressReopen) {
+                root.keyboardOpen = true
+                vkb.show()
+            }
+        }
+
+        onKeyInputActivated: {
+            root._raVkbMode     = true
+            root._raActiveField = "key"
+            if (!root._raVkbSuppressReopen) {
+                root.keyboardOpen = true
+                vkb.show()
+            }
+        }
+
         onCredentialsSaved: {
+            root._raVkbMode          = false
+            root._raVkbSuppressReopen = false
+            _raVkbSuppressTimer.stop()
+            root.keyboardOpen = false
+            vkb.hide()
             raBtn.forceActiveFocus()
             root._raUser = api.memory.has("ra_api_user") ? api.memory.get("ra_api_user") : ""
         }
-        onPopupClosed: raBtn.forceActiveFocus()
+
+        onPopupClosed: {
+            root._raVkbMode          = false
+            root._raVkbSuppressReopen = false
+            _raVkbSuppressTimer.stop()
+            root.keyboardOpen = false
+            vkb.hide()
+            raBtn.forceActiveFocus()
+        }
     }
 
     VirtualKeyboard {
@@ -619,6 +661,12 @@ Item {
         bottomBarHeight: vpx(48)
 
         onKeyTapped: function(ch) {
+            if (root._raVkbMode) {
+                if (root._raActiveField === "user") credentialsPopup.appendToUser(ch)
+                else                                credentialsPopup.appendToKey(ch)
+                _vkbRefocusTimer.start()
+                return
+            }
             root._vkbTyping = true
             inputField.text = inputField.text + ch
             root._vkbTyping = false
@@ -628,6 +676,12 @@ Item {
         }
 
         onBackspacePressed: {
+            if (root._raVkbMode) {
+                if (root._raActiveField === "user") credentialsPopup.backspaceUser()
+                else                                credentialsPopup.backspaceKey()
+                _vkbRefocusTimer.start()
+                return
+            }
             root._vkbTyping = true
             if (inputField.text.length > 0)
                 inputField.text = inputField.text.slice(0, -1)
@@ -639,6 +693,14 @@ Item {
 
         onCloseRequested: {
             _vkbRefocusTimer.stop()
+            if (root._raVkbMode) {
+                root._raVkbSuppressReopen = true
+                _raVkbSuppressTimer.restart()
+                root.keyboardOpen = false
+                hide()
+                credentialsPopup.focusActiveField(root._raActiveField)
+                return
+            }
             root.keyboardOpen = false
             hide()
             inputField.forceActiveFocus()
