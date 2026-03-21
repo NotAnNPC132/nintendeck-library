@@ -2,9 +2,13 @@
 
 -  A theme for Pegasus Frontend, inspired by the Big Picture Library.
 
-![screen0](https://github.com/ZagonAb/wtf-library/blob/f29d4e63c63e1994fad701682e9ed20fb178338a/.meta/screenshots/0.png)
+![screen0](https://github.com/ZagonAb/wtf-library/blob/71ad323ab55754aed909a2cd4dc837ab8c502e1a/.meta/screenshots/0.png)
 
-![screen5](https://github.com/ZagonAb/wtf-library/blob/f29d4e63c63e1994fad701682e9ed20fb178338a/.meta/screenshots/1.png)
+![screen1](https://github.com/ZagonAb/wtf-library/blob/71ad323ab55754aed909a2cd4dc837ab8c502e1a/.meta/screenshots/1.png)
+
+![screen2](https://github.com/ZagonAb/wtf-library/blob/71ad323ab55754aed909a2cd4dc837ab8c502e1a/.meta/screenshots/2.png)
+
+![screen3](https://github.com/ZagonAb/wtf-library/blob/71ad323ab55754aed909a2cd4dc837ab8c502e1a/.meta/screenshots/3.png)
 
 # RetroArch Monochrome Icons
 
