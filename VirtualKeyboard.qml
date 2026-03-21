@@ -9,18 +9,6 @@
 import QtQuick 2.15
 import QtGraphicalEffects 1.15
 
-// VirtualKeyboard
-// ---------------
-// Cada tecla emite keyTapped(ch) o backspacePressed() inmediatamente.
-// SearchBar los maneja igual que el teclado físico (debounce).
-// El foco permanece en el VKB hasta que el usuario presione isCancel,
-// ▼, o ↑ desde la fila 0.
-//
-// Signals
-//   keyTapped(string ch)   – carácter a agregar a inputField
-//   backspacePressed()     – borrar último carácter
-//   closeRequested()       – esconder teclado, foco a SearchBar
-
 Item {
     id: root
 
@@ -56,13 +44,10 @@ Item {
         isVisible = false
     }
 
-    // Llamado por SearchBar después de escribir en inputField para
-    // devolver el foco al teclado sin mover la posición del cursor.
     function forceActiveFocusOnKeyGrid() {
         keyGrid.forceActiveFocus()
     }
 
-    // ── Panel ─────────────────────────────────────────────────────────────────
     Item {
         id: panel
         anchors.fill: parent
@@ -79,8 +64,6 @@ Item {
             height: vpx(1); color: "#1e2a35"
         }
 
-        // ── Layout ──────────────────────────────────────────────────────────
-        // Sin tecla 🔍. SPACE=w:1.8, HIDE=w:0.75 al final de fila 3.
         property var rows: [
             [
                 {lbl:"1",val:"1",w:1},{lbl:"2",val:"2",w:1},{lbl:"3",val:"3",w:1},
@@ -108,7 +91,6 @@ Item {
             ]
         ]
 
-        // ── FocusScope ───────────────────────────────────────────────────────
         FocusScope {
             id: keyGrid
             anchors {
@@ -137,7 +119,6 @@ Item {
                 if      (val === "__BS__")   root.backspacePressed()
                 else if (val === "__HIDE__") root.closeRequested()
                 else                         root.keyTapped(val)
-                // Foco permanece en keyGrid — no llamamos forceActiveFocus aquí
             }
 
             Keys.onPressed: {
@@ -165,7 +146,6 @@ Item {
                 }
             }
 
-            // ── Render ───────────────────────────────────────────────────────
             Column {
                 anchors.fill: parent
                 spacing:      vpx(3)
@@ -219,7 +199,6 @@ Item {
                                     Behavior on color        { ColorAnimation { duration: 80 } }
                                     Behavior on border.color { ColorAnimation { duration: 80 } }
 
-                                    // ── Backspace key ──────────────────────
                                     Item {
                                         anchors.centerIn: parent
                                         width:   vpx(25)
@@ -243,7 +222,6 @@ Item {
                                             Behavior on color { ColorAnimation { duration: 80 } }
                                         }
 
-                                        // Fallback unicode si el SVG no carga
                                         Text {
                                             anchors.centerIn: parent
                                             visible: bsImg.status !== Image.Ready
@@ -255,7 +233,6 @@ Item {
                                         }
                                     }
 
-                                    // ── Hide key ────────────────────────────
                                     Item {
                                         anchors.centerIn: parent
                                         width:   vpx(30)
@@ -279,7 +256,6 @@ Item {
                                             Behavior on color { ColorAnimation { duration: 80 } }
                                         }
 
-                                        // Fallback unicode si el SVG no carga
                                         Text {
                                             anchors.centerIn: parent
                                             visible: hideImg.status !== Image.Ready
@@ -292,13 +268,12 @@ Item {
                                         }
                                     }
 
-                                    // ── Regular keys (text label) ───────────
                                     Text {
                                         anchors.centerIn: parent
                                         visible: kd.val !== "__BS__" && kd.val !== "__HIDE__"
                                         text: kd.lbl
                                         color: keyRect.isActive ? "#020508" : "#c6d4df"
-                                        font.pixelSize: kd.lbl === "SPACE" ? vpx(11) : vpx(14)
+                                        font.pixelSize: kd.lbl === "SPACE" ? vpx(18) : vpx(22)
                                         font.family: global.fonts.sans
                                         font.bold: true
                                         Behavior on color { ColorAnimation { duration: 80 } }
