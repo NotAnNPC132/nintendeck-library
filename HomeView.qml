@@ -486,8 +486,8 @@ FocusScope {
                             var g = _cell._game;
                             if (!g) return "";
                             if (_cell._isLarge)
-                                return g.assets.banner || g.assets.steam
-                                || g.assets.background || g.assets.screenshot
+                                return g.assets.background || g.assets.screenshot
+                                || g.assets.banner || g.assets.steam
                                 || g.assets.boxFront || "";
                             return g.assets.poster || g.assets.boxFront
                             || g.assets.screenshot || "";
