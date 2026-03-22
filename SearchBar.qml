@@ -23,9 +23,9 @@ Item {
     property bool keyboardOpen: false
     property bool _vkbTyping: false
 
-    property bool   _raVkbMode:          false
-    property string _raActiveField:      "user"
-    property bool   _raVkbSuppressReopen: false
+    property bool _raVkbMode: false
+    property string _raActiveField: "user"
+    property bool _raVkbSuppressReopen: false
 
     property bool semiTransparent: false
     property bool solidInHub: false
@@ -96,7 +96,7 @@ Item {
     Item {
         id: searchZone
         anchors { top: parent.top; bottom: parent.bottom; left: parent.left }
-        width: parent.width * 0.80
+        width: parent.width * 0.78
 
         MouseArea {
             id: searchZoneHover
@@ -565,6 +565,11 @@ Item {
                     inputField.cursorPosition = inputField.text.length
                 }
 
+                Keys.onDownPressed: {
+                    event.accepted = true
+                    root.focusDownRequested()
+                }
+
                 Keys.onPressed: {
                     if (api.keys.isCancel(event)) {
                         event.accepted = true
@@ -698,7 +703,7 @@ Item {
                 _raVkbSuppressTimer.restart()
                 root.keyboardOpen = false
                 hide()
-                credentialsPopup.focusActiveField(root._raActiveField)
+                credentialsPopup.focusFieldSafe(root._raActiveField)
                 return
             }
             root.keyboardOpen = false

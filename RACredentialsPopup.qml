@@ -21,8 +21,8 @@ FocusScope {
     signal userInputActivated()
     signal keyInputActivated()
 
-    property string _testState:   "idle"
-    property string _testMsg:     ""
+    property string _testState: "idle"
+    property string _testMsg: ""
     property string _activeField: "none"
 
     function appendToUser(ch) {
@@ -39,16 +39,28 @@ FocusScope {
         if (_testState !== "testing" && _keyInput.text.length > 0)
             _keyInput.text = _keyInput.text.slice(0, -1)
     }
-    function focusActiveField(field) {
-        if (field === "key") _keyInput.forceActiveFocus()
-        else                 _userInput.forceActiveFocus()
+
+    function focusFieldSafe(field) {
+        if (field === "key") _keyFieldScope.forceActiveFocus()
+        else                 _userFieldScope.forceActiveFocus()
+    }
+
+    function _activateField(field) {
+        root._activeField = field
+        if (field === "key") {
+            _keyFieldScope.forceActiveFocus()
+            root.keyInputActivated()
+        } else {
+            _userFieldScope.forceActiveFocus()
+            root.userInputActivated()
+        }
     }
 
     function open() {
         _userInput.text = api.memory.has("ra_api_user") ? api.memory.get("ra_api_user") : ""
         _keyInput.text  = api.memory.has("ra_api_key")  ? api.memory.get("ra_api_key")  : ""
         _testState = "idle"
-        _testMsg   = ""
+        _testMsg = ""
         isOpen = true
         _focusTimer.start()
     }
@@ -64,13 +76,13 @@ FocusScope {
         var k = _keyInput.text.trim()
         if (u === "" || k === "") {
             _testState = "error"
-            _testMsg   = "Both fields are required."
+            _testMsg  = "Both fields are required."
             return
         }
         api.memory.set("ra_api_user", u)
         api.memory.set("ra_api_key",  k)
         _testState = "testing"
-        _testMsg   = ""
+        _testMsg = ""
         _testConnection(u, k)
     }
 
@@ -93,19 +105,19 @@ FocusScope {
                         _closeTimer.start()
                     } else {
                         _testState = "error"
-                        _testMsg   = "Invalid credentials. Check your API User and Key."
+                        _testMsg = "Invalid credentials. Check your API User and Key."
                     }
                 } catch(e) {
                     _testState = "error"
-                    _testMsg   = "Could not parse server response."
+                    _testMsg = "Could not parse server response."
                 }
             } else if (xhr.status === 0) {
                 _testState = "success"
-                _testMsg   = "Saved. (No network — could not verify)"
+                _testMsg = "Saved. (No network — could not verify)"
                 _closeTimer.start()
             } else {
                 _testState = "error"
-                _testMsg   = "Server error: HTTP " + xhr.status
+                _testMsg = "Server error: HTTP " + xhr.status
             }
         }
         xhr.send()
@@ -123,7 +135,10 @@ FocusScope {
     Timer {
         id: _focusTimer
         interval: 30
-        onTriggered: _userInput.forceActiveFocus()
+        onTriggered: {
+            root._activeField = "user"
+            root.userInputActivated()
+        }
     }
 
     property real _panelOpacity: isOpen ? 1.0 : 0.0
@@ -203,159 +218,193 @@ FocusScope {
 
             Rectangle { width: parent.width; height: vpx(1); color: "#1e2e3e" }
 
-            Column {
-                width: parent.width; spacing: vpx(5)
+            FocusScope {
+                id: _userFieldScope
+                width: parent.width
+                height: _userFieldCol.implicitHeight
 
-                Text {
-                    text: "USER NAME:"
-                    font.pixelSize: vpx(11); font.family: global.fonts.sans
-                    font.letterSpacing: 0.6; color: "#8b929a"
+                readonly property bool _highlighted: activeFocus || root._activeField === "user"
+
+                Keys.onPressed: {
+                    if (root._testState === "testing") { event.accepted = true; return }
+                    if (!event.isAutoRepeat && api.keys.isAccept(event)) {
+                        event.accepted = true
+                        root._activateField("user")
+                        return
+                    }
+                    if (api.keys.isCancel(event)) {
+                        event.accepted = true
+                        if (_userInput.text.length > 0)
+                            _userInput.text = _userInput.text.slice(0, -1)
+                        return
+                    }
                 }
+                Keys.onDownPressed: { event.accepted = true; _keyFieldScope.forceActiveFocus() }
 
-                Rectangle {
-                    width: parent.width; height: vpx(32); radius: vpx(4)
-                    color:        (root._activeField === "user" || _userInput.activeFocus) ? "#0f2232" : "#292b2d"
-                    border.color: (root._activeField === "user" || _userInput.activeFocus) ? "white"   : "#292b2d"
-                    border.width: vpx(1)
-                    Behavior on color        { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                Column {
+                    id: _userFieldCol
+                    width: parent.width
+                    spacing: vpx(5)
 
-                    TextInput {
-                        id: _userInput
-                        anchors {
-                            left: parent.left; right: parent.right
-                            verticalCenter: parent.verticalCenter
-                            leftMargin: vpx(10); rightMargin: vpx(10)
-                        }
-                        color: "#ffffff"; font.pixelSize: vpx(13)
-                        font.family: global.fonts.sans
-                        selectionColor: "#2a6496"; selectedTextColor: "#ffffff"
-                        clip: true
-                        readOnly: root._testState === "testing"
+                    Text {
+                        text: "USER NAME:"
+                        font.pixelSize: vpx(11); font.family: global.fonts.sans
+                        font.letterSpacing: 0.6; color: "#8b929a"
+                    }
 
-                        cursorDelegate: Rectangle {
-                            id: _userCursor
-                            width:  vpx(2)
-                            height: vpx(16)
-                            color:  "#ffffff"
-                            visible: root._activeField === "user" && root._testState !== "testing"
-                            SequentialAnimation on opacity {
-                                running:  _userCursor.visible
-                                loops:    Animation.Infinite
-                                NumberAnimation { to: 1; duration: 0   }
-                                NumberAnimation { to: 1; duration: 480  }
-                                NumberAnimation { to: 0; duration: 0   }
-                                NumberAnimation { to: 0; duration: 480  }
+                    Rectangle {
+                        id: _userRect
+                        width: parent.width; height: vpx(32); radius: vpx(4)
+                        color: _userFieldScope._highlighted ? "#0f2232" : "#292b2d"
+                        border.color: _userFieldScope._highlighted ? "white"   : "#292b2d"
+                        border.width: vpx(1)
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                        TextInput {
+                            id: _userInput
+                            anchors {
+                                left: parent.left; right: parent.right
+                                verticalCenter: parent.verticalCenter
+                                leftMargin: vpx(10); rightMargin: vpx(10)
                             }
-                            onVisibleChanged: if (!visible) opacity = 1
+                            color: "#ffffff"; font.pixelSize: vpx(13)
+                            font.family: global.fonts.sans
+                            selectionColor: "#2a6496"; selectedTextColor: "#ffffff"
+                            clip: true
+                            readOnly: true
+                            activeFocusOnPress: false
+                            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
+                                            | Qt.ImhSensitiveData | Qt.ImhMultiLine
+
+                            cursorDelegate: Rectangle {
+                                id: _userCursor
+                                width: vpx(2)
+                                height: vpx(16)
+                                color: "#ffffff"
+                                visible: root._activeField === "user" && root._testState !== "testing"
+                                SequentialAnimation on opacity {
+                                    running: _userCursor.visible
+                                    loops: Animation.Infinite
+                                    NumberAnimation { to: 1; duration: 0   }
+                                    NumberAnimation { to: 1; duration: 480  }
+                                    NumberAnimation { to: 0; duration: 0   }
+                                    NumberAnimation { to: 0; duration: 480  }
+                                }
+                                onVisibleChanged: if (!visible) opacity = 1
+                            }
+
+                            Text {
+                                anchors.fill: parent
+                                text: "your username"; color: "#3a4a5a"
+                                font: _userInput.font
+                                visible: _userInput.text.length === 0
+                            }
                         }
 
-                        Text {
+                        MouseArea {
                             anchors.fill: parent
-                            text: "your username"; color: "#3a4a5a"
-                            font: _userInput.font
-                            visible: _userInput.text.length === 0
-                        }
-
-                        Keys.onDownPressed:   { event.accepted = true; _keyInput.forceActiveFocus() }
-                        Keys.onTabPressed:    { event.accepted = true; _keyInput.forceActiveFocus() }
-                        Keys.onReturnPressed: { event.accepted = true; _keyInput.forceActiveFocus() }
-
-                        onActiveFocusChanged: {
-                            if (activeFocus) {
-                                root._activeField = "user"
-                                root.userInputActivated()
-                            }
-                        }
-
-                        Keys.onPressed: {
-                            if (root._testState === "testing") { event.accepted = true; return }
-                            if (api.keys.isCancel(event)) {
-                                event.accepted = true
-                                if (_userInput.text.length > 0)
-                                    _userInput.text = _userInput.text.slice(0, -1)
-                                return
+                            cursorShape: Qt.IBeamCursor
+                            onClicked: {
+                                if (root._testState !== "testing")
+                                    root._activateField("user")
                             }
                         }
                     }
                 }
             }
 
-            Column {
-                width: parent.width; spacing: vpx(5)
+            FocusScope {
+                id: _keyFieldScope
+                width: parent.width
+                height: _keyFieldCol.implicitHeight
 
-                Text {
-                    text: "API KEY:"
-                    font.pixelSize: vpx(11); font.family: global.fonts.sans
-                    font.letterSpacing: 0.6; color: "#8b929a"
+                readonly property bool _highlighted: activeFocus || root._activeField === "key"
+
+                Keys.onPressed: {
+                    if (root._testState === "testing") { event.accepted = true; return }
+                    if (!event.isAutoRepeat && api.keys.isAccept(event)) {
+                        event.accepted = true
+                        root._activateField("key")
+                        return
+                    }
+                    if (api.keys.isCancel(event)) {
+                        event.accepted = true
+                        if (_keyInput.text.length > 0)
+                            _keyInput.text = _keyInput.text.slice(0, -1)
+                        return
+                    }
                 }
+                Keys.onUpPressed:   { event.accepted = true; _userFieldScope.forceActiveFocus() }
+                Keys.onDownPressed: { event.accepted = true; _okBtn.forceActiveFocus() }
 
-                Rectangle {
-                    width: parent.width; height: vpx(32); radius: vpx(4)
-                    color:        (root._activeField === "key" || _keyInput.activeFocus) ? "#0f2232" : "#292b2d"
-                    border.color: (root._activeField === "key" || _keyInput.activeFocus) ? "white"   : "#292b2d"
-                    border.width: vpx(1)
-                    Behavior on color        { ColorAnimation { duration: 150 } }
-                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                Column {
+                    id: _keyFieldCol
+                    width: parent.width
+                    spacing: vpx(5)
 
-                    TextInput {
-                        id: _keyInput
-                        anchors {
-                            left: parent.left; right: parent.right
-                            verticalCenter: parent.verticalCenter
-                            leftMargin: vpx(10); rightMargin: vpx(10)
-                        }
-                        color: "#ffffff"; font.pixelSize: vpx(13)
-                        font.family: global.fonts.sans
-                        selectionColor: "#2a6496"; selectedTextColor: "#ffffff"
-                        clip: true
-                        readOnly: root._testState === "testing"
+                    Text {
+                        text: "API KEY:"
+                        font.pixelSize: vpx(11); font.family: global.fonts.sans
+                        font.letterSpacing: 0.6; color: "#8b929a"
+                    }
 
-                        cursorDelegate: Rectangle {
-                            id: _keyCursor
-                            width:  vpx(2)
-                            height: vpx(16)
-                            color:  "#ffffff"
-                            visible: root._activeField === "key" && root._testState !== "testing"
-                            SequentialAnimation on opacity {
-                                running:  _keyCursor.visible
-                                loops:    Animation.Infinite
-                                NumberAnimation { to: 1; duration: 0   }
-                                NumberAnimation { to: 1; duration: 480  }
-                                NumberAnimation { to: 0; duration: 0   }
-                                NumberAnimation { to: 0; duration: 480  }
+                    Rectangle {
+                        id: _keyRect
+                        width: parent.width; height: vpx(32); radius: vpx(4)
+                        color:        _keyFieldScope._highlighted ? "#0f2232" : "#292b2d"
+                        border.color: _keyFieldScope._highlighted ? "white"   : "#292b2d"
+                        border.width: vpx(1)
+                        Behavior on color        { ColorAnimation { duration: 150 } }
+                        Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                        TextInput {
+                            id: _keyInput
+                            anchors {
+                                left: parent.left; right: parent.right
+                                verticalCenter: parent.verticalCenter
+                                leftMargin: vpx(10); rightMargin: vpx(10)
                             }
-                            onVisibleChanged: if (!visible) opacity = 1
+                            color: "#ffffff"; font.pixelSize: vpx(13)
+                            font.family: global.fonts.sans
+                            selectionColor: "#2a6496"; selectedTextColor: "#ffffff"
+                            clip: true
+                            readOnly: true
+                            activeFocusOnPress: false
+                            inputMethodHints: Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
+                                            | Qt.ImhSensitiveData | Qt.ImhMultiLine
+
+                            cursorDelegate: Rectangle {
+                                id: _keyCursor
+                                width:  vpx(2)
+                                height: vpx(16)
+                                color:  "#ffffff"
+                                visible: root._activeField === "key" && root._testState !== "testing"
+                                SequentialAnimation on opacity {
+                                    running:  _keyCursor.visible
+                                    loops:    Animation.Infinite
+                                    NumberAnimation { to: 1; duration: 0   }
+                                    NumberAnimation { to: 1; duration: 480  }
+                                    NumberAnimation { to: 0; duration: 0   }
+                                    NumberAnimation { to: 0; duration: 480  }
+                                }
+                                onVisibleChanged: if (!visible) opacity = 1
+                            }
+
+                            Text {
+                                anchors.fill: parent
+                                text: "your API key"; color: "#3a4a5a"
+                                font: _keyInput.font
+                                visible: _keyInput.text.length === 0
+                            }
                         }
 
-                        Text {
+                        MouseArea {
                             anchors.fill: parent
-                            text: "your API key"; color: "#3a4a5a"
-                            font: _keyInput.font
-                            visible: _keyInput.text.length === 0
-                        }
-
-                        Keys.onUpPressed:   { event.accepted = true; _userInput.forceActiveFocus() }
-                        Keys.onDownPressed: { event.accepted = true; _okBtn.forceActiveFocus() }
-                        Keys.onTabPressed:  { event.accepted = true; _okBtn.forceActiveFocus() }
-
-                        onActiveFocusChanged: {
-                            if (activeFocus) {
-                                root._activeField = "key"
-                                root.keyInputActivated()
-                            }
-                        }
-
-                        Keys.onPressed: {
-                            if (root._testState === "testing") { event.accepted = true; return }
-                            if (api.keys.isCancel(event)) {
-                                event.accepted = true
-                                if (_keyInput.text.length > 0)
-                                    _keyInput.text = _keyInput.text.slice(0, -1)
-                                return
-                            }
-                            if (!event.isAutoRepeat && api.keys.isAccept(event)) {
-                                event.accepted = true; root._save()
+                            cursorShape: Qt.IBeamCursor
+                            onClicked: {
+                                if (root._testState !== "testing")
+                                    root._activateField("key")
                             }
                         }
                     }
@@ -407,7 +456,7 @@ FocusScope {
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             visible: root._testState === "success" || root._testState === "error"
-                            text:  root._testState === "success" ? "✔" : "✘"
+                            text: root._testState === "success" ? "✔" : "✘"
                             color: root._testState === "success" ? "#2ecc71" : "#e74c3c"
                             font.pixelSize: vpx(13); font.bold: true
                         }
@@ -443,16 +492,16 @@ FocusScope {
                     Rectangle {
                         anchors.fill: parent; radius: vpx(15)
                         color: {
-                            if (_okBtn._busy)       return "#1a2535"
+                            if (_okBtn._busy) return "#1a2535"
                             if (_okBtn.activeFocus) return "white"
                             return "#292b2d"
                         }
                         border.color: (_okBtn.activeFocus && !_okBtn._busy) ? "#0b1117" : "#292b2d"
                         border.width: vpx(1)
                         opacity: _okBtn._busy ? 0.5 : 1.0
-                        Behavior on color        { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: 150 } }
                         Behavior on border.color { ColorAnimation { duration: 150 } }
-                        Behavior on opacity      { NumberAnimation { duration: 150 } }
+                        Behavior on opacity { NumberAnimation { duration: 150 } }
                     }
                     Text {
                         anchors.centerIn: parent
@@ -462,7 +511,7 @@ FocusScope {
                         Behavior on color { ColorAnimation { duration: 150 } }
                     }
 
-                    Keys.onUpPressed:    { event.accepted = true; _keyInput.forceActiveFocus() }
+                    Keys.onUpPressed: { event.accepted = true; _keyFieldScope.forceActiveFocus() }
                     Keys.onRightPressed: { event.accepted = true; _cancelBtn.forceActiveFocus() }
                     Keys.onPressed: {
                         if (_okBtn._busy) { event.accepted = true; return }
@@ -486,10 +535,10 @@ FocusScope {
 
                     Rectangle {
                         anchors.fill: parent; radius: vpx(15)
-                        color:        _cancelBtn.activeFocus ? "#2a0f0f" : "#292b2d"
+                        color: _cancelBtn.activeFocus ? "#2a0f0f" : "#292b2d"
                         border.color: _cancelBtn.activeFocus ? "#e74c3c" : "#292b2d"
                         border.width: vpx(1)
-                        Behavior on color        { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: 150 } }
                         Behavior on border.color { ColorAnimation { duration: 150 } }
                     }
                     Text {
@@ -500,7 +549,7 @@ FocusScope {
                         Behavior on color { ColorAnimation { duration: 150 } }
                     }
 
-                    Keys.onUpPressed:   { event.accepted = true; _keyInput.forceActiveFocus() }
+                    Keys.onUpPressed: { event.accepted = true; _keyFieldScope.forceActiveFocus() }
                     Keys.onLeftPressed: { event.accepted = true; _okBtn.forceActiveFocus() }
                     Keys.onPressed: {
                         if (root._testState === "testing") { event.accepted = true; return }

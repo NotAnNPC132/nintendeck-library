@@ -69,13 +69,15 @@ FocusScope {
         sorters: RoleSorter { roleName: "lastPlayed"; sortOrder: Qt.DescendingOrder }
     }
 
-    readonly property int _recentCount: Math.min(_recentSrc.count, 3)
+    readonly property int _recentCount: 3
     readonly property int _totalSlots: _recentCount + 1
     property var _recentGames: []
 
     function _rebuildCache() {
         var arr = [];
-        for (var i = 0; i < _recentCount; i++) {
+        var usedTitles = {};
+        var recentLimit = Math.min(_recentSrc.count, 3);
+        for (var i = 0; i < recentLimit; i++) {
             var proxy = _recentSrc.get(i);
             if (!proxy) continue;
             for (var j = 0; j < api.allGames.count; j++) {
@@ -83,10 +85,20 @@ FocusScope {
                 if (g && g.title === proxy.title
                     && String(g.lastPlayed) === String(proxy.lastPlayed)) {
                     arr.push(g);
+                usedTitles[g.title] = true;
                 break;
                     }
             }
         }
+
+        for (var k = 0; k < api.allGames.count && arr.length < 3; k++) {
+            var fg = api.allGames.get(k);
+            if (fg && !usedTitles[fg.title]) {
+                arr.push(fg);
+                usedTitles[fg.title] = true;
+            }
+        }
+
         _recentGames = arr;
     }
 
@@ -421,7 +433,9 @@ FocusScope {
                 font.bold: true
                 font.family: global.fonts.sans
                 color: "#ffffff"
-                opacity: 0.95
+                visible: _strip.currentIndex < Math.min(_recentSrc.count, 3)
+                Behavior on opacity { NumberAnimation { duration: 200 } }
+                opacity: visible ? 0.9 : 0.0
             }
 
             ListView {
@@ -1309,26 +1323,6 @@ FocusScope {
                 }
             }
         }
-    }
-
-    Text {
-        anchors {
-            right: parent.right
-            rightMargin: vpx(40)
-            top: parent.top
-            topMargin: vpx(-20)
-            bottom: parent.bottom
-            bottomMargin: vpx(48)
-        }
-        width: parent.width * 0.45
-        verticalAlignment: Text.AlignVCenter
-        visible: root._recentCount === 0
-        text: "No games played yet.\nGo to your Library to start playing!"
-        horizontalAlignment: Text.AlignHCenter
-        font.pixelSize: vpx(18)
-        font.family: global.fonts.sans
-        color: "#8b929a"
-        lineHeight: 1.5
     }
 
     onFocusChanged: { if (focus) _strip.forceActiveFocus(); }
