@@ -117,17 +117,6 @@ Rectangle {
                 color: logoHover.containsMouse ? "#d8d8d8" : "#ffffff"
                 Behavior on color { ColorAnimation { duration: 150 } }
 
-                Text {
-                    id: pegasusLabel
-                    anchors.centerIn: parent
-                    text: "Home"
-                    color: "#0b1117"
-                    font.family: global.fonts.sans
-                    font.pixelSize: vpx(11)
-                    font.bold: true
-                    font.letterSpacing: vpx(0.8)
-                }
-
             }
 
             Text {
