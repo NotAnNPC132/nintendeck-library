@@ -157,7 +157,7 @@ Rectangle {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "¡%$#@!-Library"
+            text: "Library"
             color: "#ffffff"
             font.family: global.fonts.sans
             font.pixelSize: vpx(36)
