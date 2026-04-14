@@ -1,3 +1,5 @@
+Fork of the WTF-Library theme, changed for NintenDeck. Below is the original README.md
+
 # WTF-LIBRARY
 
 -  A theme for Pegasus Frontend, inspired by the Big Picture Library.
