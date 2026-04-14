@@ -120,7 +120,7 @@ Rectangle {
                 Text {
                     id: pegasusLabel
                     anchors.centerIn: parent
-                    text: "PEGASUS-FE"
+                    text: "Home"
                     color: "#0b1117"
                     font.family: global.fonts.sans
                     font.pixelSize: vpx(11)
@@ -133,7 +133,7 @@ Rectangle {
             Text {
                 id: menuLabel
                 anchors.verticalCenter: parent.verticalCenter
-                text: "WTF-LIBRARY"
+                text: "NintenDeck"
                 color: logoHover.containsMouse ? "#cccccc" : "#ffffff"
                 font.family: global.fonts.sans
                 font.pixelSize:  vpx(13)
